@@ -4,33 +4,70 @@ import pickle
 from tkinter import *
 from tkinter import font as tkFont
 
+# theme constants
+primary_color = "#DDDDDD"
+secondary_color = "#5A5A5A"
+bright_text_color = "#FAFAFA"
+settings_text_color = "#EDF263"
+
+
+def select_alternating_colors(use_primary):
+    used_primary_bg = primary_color if use_primary else secondary_color
+    used_secondary_bg = secondary_color if use_primary else primary_color
+    used_text_color = "black" if use_primary else bright_text_color
+    return used_primary_bg, used_secondary_bg, used_text_color
+
+
+def create_palette_button(master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE):
+    if (handler == NONE):
+        return Button(master=master, text=key, font=font, bg=bg, activebackground=activebackground, fg=fg,
+                      command=lambda key=key: pyperclip.copy(paste_dict[key]))
+    else:
+        return Button(master=master, text=key, font=font, bg=bg, activebackground=activebackground, fg=fg,
+                      command=handler)
+
+
+def handle_settings_window():
+    settings_window = Tk()
+    label = Label(master=settings_window,
+                  text="hello this is the settings window!")
+    label.pack()
+    settings_window.mainloop()
+
 
 def main():
+
     paste_dict = load_paste_dict()
 
     window = Tk()
 
+    helv12 = tkFont.Font(family='Helvetica', size=12, weight='bold')
+
     # this window will have high priority, draw on top
     window.attributes('-topmost', True)
 
-    helv36 = tkFont.Font(family='Helvetica', size=12, weight='bold')
-
-    primary_color = "#DDDDDD"
-    secondary_color = "#5A5A5A"
-
     # NOTE: regen buttons after an update happens (that way all the callbacks will behave the way I want them to.)
     use_primary = True
+
+    used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
+        use_primary)
+
     for key in paste_dict.keys():
-        button = Button(master=window, text=key, font=helv36, bg=primary_color if use_primary else secondary_color, activebackground=secondary_color if use_primary else primary_color,
-                        command=lambda key=key: pyperclip.copy(paste_dict[key]))
 
+        # make button
+        button = create_palette_button(window, key, helv12, used_primary_bg,
+                                       used_secondary_bg, used_text_color, paste_dict=paste_dict)
         button.pack(expand=1, fill="both")
+
+        # handle colors
         use_primary = not use_primary
+        used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
+            use_primary)
 
-    settings_button = Button(master=window, text="Settings", font=helv36, bg=primary_color if use_primary else secondary_color, activebackground=secondary_color if use_primary else primary_color,
-                             command=lambda key=key: pyperclip.copy(paste_dict[key]))
+    settings_button = create_palette_button(window, "Settings", helv12, used_primary_bg,
+                                            used_secondary_bg, settings_text_color, handler=handle_settings_window)
 
-    button.pack(expand=1, fill="both")
+    settings_button.pack(expand=1, fill="both")
 
     window.mainloop()
 
