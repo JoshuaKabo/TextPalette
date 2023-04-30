@@ -1,6 +1,7 @@
 # pyperclip for write to clipboard, pickle for saving dictionaries
 import pyperclip
 import pickle
+import math
 from tkinter import *
 from tkinter import font as tkFont
 
@@ -9,6 +10,9 @@ primary_color = "#DDDDDD"
 secondary_color = "#5A5A5A"
 bright_text_color = "#FAFAFA"
 settings_text_color = "#EDF263"
+
+# TODO: rainbow buttons
+# Also TODO: text color difference detect to account for text on rainbow buttons
 
 
 def select_alternating_colors(use_primary):
@@ -20,15 +24,24 @@ def select_alternating_colors(use_primary):
 
 def create_palette_button(master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE):
     if (handler == NONE):
-        return Button(master=master, text=key, font=font, bg=bg, activebackground=activebackground, fg=fg,
+        return Button(master=master, text=key, font=font, bg=bg, width=20, height=5, activebackground=activebackground, fg=fg,
                       command=lambda key=key: pyperclip.copy(paste_dict[key]))
     else:
-        return Button(master=master, text=key, font=font, bg=bg, activebackground=activebackground, fg=fg,
+        return Button(master=master, text=key, font=font, bg=bg, width=20, height=5, activebackground=activebackground, fg=fg,
                       command=handler)
 
 
+def create_palette_window(title="Text Palette", topmost=True):
+    window = Tk()
+    window.title(title)
+    if (topmost):
+        window.attributes('-topmost', True)
+    return window
+
+
 def handle_settings_window():
-    settings_window = Tk()
+    settings_window = create_palette_window(title="Text Palette Settings")
+
     label = Label(master=settings_window,
                   text="hello this is the settings window!")
     label.pack()
@@ -37,14 +50,11 @@ def handle_settings_window():
 
 def main():
 
+    window = create_palette_window()
+
     paste_dict = load_paste_dict()
 
-    window = Tk()
-
     helv12 = tkFont.Font(family='Helvetica', size=12, weight='bold')
-
-    # this window will have high priority, draw on top
-    window.attributes('-topmost', True)
 
     # NOTE: regen buttons after an update happens (that way all the callbacks will behave the way I want them to.)
     use_primary = True
@@ -52,22 +62,60 @@ def main():
     used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
         use_primary)
 
+    desired_cols = 4
+
+    curr_ind = 0
+
     for key in paste_dict.keys():
+
+        # handle positioning
+        curr_col = curr_ind % desired_cols
+        curr_row = math.floor(curr_ind / desired_cols)
+
+        # handle colors
+        if (desired_cols % 2 == 0):
+            if (curr_col % 2 == 0):
+                use_primary = curr_row % 2 == 0
+            else:
+                use_primary = curr_row % 2 == 1
+        else:
+            use_primary = not use_primary
+
+        used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
+            use_primary)
 
         # make button
         button = create_palette_button(window, key, helv12, used_primary_bg,
                                        used_secondary_bg, used_text_color, paste_dict=paste_dict)
-        button.pack(expand=1, fill="both")
 
-        # handle colors
+        button.grid(row=curr_row, column=curr_col, sticky="NESW")
+
+        window.columnconfigure(curr_col, weight=1)
+        window.rowconfigure(curr_row, weight=1)
+
+        curr_ind += 1
+
+    curr_col = curr_ind % desired_cols
+    curr_row = math.floor(curr_ind / desired_cols)
+
+    # handle colors
+    if (desired_cols % 2 == 0):
+        if (curr_col % 2 == 0):
+            use_primary = curr_row % 2 == 0
+        else:
+            use_primary = curr_row % 2 == 1
+    else:
         use_primary = not use_primary
-        used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
-            use_primary)
+
+    used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
+        use_primary)
 
     settings_button = create_palette_button(window, "Settings", helv12, used_primary_bg,
                                             used_secondary_bg, settings_text_color, handler=handle_settings_window)
+    settings_button.grid(row=curr_row, column=curr_col, sticky="NESW")
 
-    settings_button.pack(expand=1, fill="both")
+    window.columnconfigure(curr_col, weight=1)
+    window.rowconfigure(curr_row, weight=1)
 
     window.mainloop()
 
@@ -111,3 +159,8 @@ if __name__ == "__main__":
 
 
 # I could have numrows, numcols, textsize (extras: ) add a thing, remove a thing, save to board, colors used, draw on top
+
+
+# Test is index 0, 0, 0
+# meaning is index 4, 1, 0
+# if there are an even number of cols, and this is
