@@ -14,6 +14,9 @@ settings_text_color = "#EEEE22"
 
 # TODO: text color difference detect to account for text on rainbow buttons
 
+# could theoretically store window size, num cols, etc
+user_prefs = {}
+
 
 def select_alternating_colors(use_primary):
     used_primary_bg = primary_color if use_primary else secondary_color
@@ -84,7 +87,7 @@ def handle_settings_window():
 
     # create cancel button
     add_entry_button = Button(master=settings_window,
-                              text="Cancel", command=add_entry)
+                              text="Cancel", command=settings_window.destroy)
     add_entry_button.grid(row=3, column=0,  sticky="NESW")
 
     # create save changes button
@@ -103,23 +106,18 @@ def handle_settings_window():
     settings_window.mainloop()
 
 
-def main():
+def clear_buttons(buttonarr, window, helv12):
 
-    window = create_palette_window()
+    use_primary = True
+
+    for button in buttonarr:
+        button.destroy()
 
     paste_dict = load_paste_dict()
 
-    helv12 = tkFont.Font(family='Helvetica', size=12, weight='bold')
-
-    # NOTE: regen buttons after an update happens (that way all the callbacks will behave the way I want them to.)
-    use_primary = True
-
-    used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
-        use_primary)
+    curr_ind = 0
 
     desired_cols = 9
-
-    curr_ind = 0
 
     for key in paste_dict.keys():
 
@@ -140,10 +138,37 @@ def main():
 
         button.grid(row=curr_row, column=curr_col, sticky="NESW")
 
+        buttonarr.append(button)
+
         window.columnconfigure(curr_col, weight=1)
         window.rowconfigure(curr_row, weight=1)
 
         curr_ind += 1
+
+    return buttonarr, curr_ind
+
+
+def main():
+
+    window = create_palette_window()
+
+    paste_dict = load_paste_dict()
+
+    helv12 = tkFont.Font(family='Helvetica', size=12, weight='bold')
+
+    # NOTE: regen buttons after an update happens (that way all the callbacks will behave the way I want them to.)
+    use_primary = True
+
+    used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
+        use_primary)
+
+    desired_cols = 9
+
+    button_arr = []
+    clearret = clear_buttons(button_arr, window, helv12)
+
+    button_arr = clearret[0]
+    curr_ind = clearret[1]
 
     curr_col = curr_ind % desired_cols
     curr_row = math.floor(curr_ind / desired_cols)
@@ -155,7 +180,7 @@ def main():
     used_primary_bg = secondary_color
 
     settings_button = create_palette_button(window, "Settings", helv12, used_primary_bg,
-                                            used_secondary_bg, settings_text_color, handler=handle_settings_window)
+                                            used_secondary_bg, settings_text_color, handler=lambda: clear_buttons(button_arr, window, helv12))
     settings_button.grid(row=curr_row, column=curr_col, sticky="NESW")
 
     window.columnconfigure(curr_col, weight=1)
