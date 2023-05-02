@@ -2,6 +2,7 @@
 import pyperclip
 import pickle
 import math
+import colorsys
 from tkinter import *
 from tkinter import font as tkFont
 
@@ -9,7 +10,9 @@ from tkinter import font as tkFont
 primary_color = "#DDDDDD"
 secondary_color = "#5A5A5A"
 bright_text_color = "#FAFAFA"
-settings_text_color = "#EDF263"
+# settings_text_color = "#EDF263"
+settings_text_color = "#EEEE22"
+# settings_text_color = "#f5d400"
 
 # TODO: rainbow buttons
 # Also TODO: text color difference detect to account for text on rainbow buttons
@@ -47,6 +50,8 @@ def handle_settings_window():
     label.pack()
     settings_window.mainloop()
 
+# def get_grey_color():
+
 
 def main():
 
@@ -62,7 +67,7 @@ def main():
     used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
         use_primary)
 
-    desired_cols = 4
+    desired_cols = 9
 
     curr_ind = 0
 
@@ -73,16 +78,20 @@ def main():
         curr_row = math.floor(curr_ind / desired_cols)
 
         # handle colors
-        if (desired_cols % 2 == 0):
-            if (curr_col % 2 == 0):
-                use_primary = curr_row % 2 == 0
-            else:
-                use_primary = curr_row % 2 == 1
-        else:
-            use_primary = not use_primary
+        # if (desired_cols % 2 == 0):
+        #     if (curr_col % 2 == 0):
+        #         use_primary = curr_row % 2 == 0
+        #     else:
+        #         use_primary = curr_row % 2 == 1
+        # else:
+        #     use_primary = not use_primary
 
         used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
             use_primary)
+
+        # overwrite for color test
+        print(select_rgb_color(curr_ind, len(paste_dict)-1))
+        used_primary_bg = (select_rgb_color(curr_ind, len(paste_dict)-1))
 
         # make button
         button = create_palette_button(window, key, helv12, used_primary_bg,
@@ -99,16 +108,19 @@ def main():
     curr_row = math.floor(curr_ind / desired_cols)
 
     # handle colors
-    if (desired_cols % 2 == 0):
-        if (curr_col % 2 == 0):
-            use_primary = curr_row % 2 == 0
-        else:
-            use_primary = curr_row % 2 == 1
-    else:
-        use_primary = not use_primary
+    # if (desired_cols % 2 == 0):
+    #     if (curr_col % 2 == 0):
+    #         use_primary = curr_row % 2 == 0
+    #     else:
+    #         use_primary = curr_row % 2 == 1
+    # else:
+    #     use_primary = not use_primary
 
     used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
         use_primary)
+
+    # overwrite for color test
+    used_primary_bg = secondary_color
 
     settings_button = create_palette_button(window, "Settings", helv12, used_primary_bg,
                                             used_secondary_bg, settings_text_color, handler=handle_settings_window)
@@ -120,7 +132,30 @@ def main():
     window.mainloop()
 
 
-# loads on startup
+def lerp(a, b, t):
+    return (1-t) * a + t * b
+
+
+baseColor = 0xff0000
+endColor = 0x0000ff
+
+# based on the current index and x options, pick a color
+
+
+def select_rgb_color(ind, n_opt):
+    hue = ind/n_opt
+    sat = 0.55
+    val = 1
+    rgb = colorsys.hsv_to_rgb(hue, sat, val)
+    red = int(rgb[0] * 0xff)
+    green = int(rgb[1] * 0xff)
+    blue = int(rgb[2] * 0xff)
+    return "#%02x%02x%02x" % (red, green, blue)
+    # return lerp
+
+    # loads on startup
+
+
 def load_paste_dict():
 
     loading_dict = {}
