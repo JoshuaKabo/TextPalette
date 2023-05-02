@@ -24,10 +24,10 @@ def select_alternating_colors(use_primary):
 
 def create_palette_button(master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE):
     if (handler == NONE):
-        return Button(master=master, text=key, font=font, bg=bg, width=10, height=5, activebackground=activebackground, fg=fg,
+        return Button(master=master, text=key, font=font, bg=bg, width=13, height=5, activebackground=activebackground, fg=fg,
                       command=lambda key=key: pyperclip.copy(paste_dict[key]))
     else:
-        return Button(master=master, text=key, font=font, bg=bg, width=10, height=5, activebackground=activebackground, fg=fg,
+        return Button(master=master, text=key, font=font, bg=bg, width=13, height=5, activebackground=activebackground, fg=fg,
                       command=handler)
 
 
@@ -52,51 +52,51 @@ def handle_settings_window():
 
     # create number of columns label and entry box
     num_cols_label = Label(master=settings_window, text="Number of columns:")
-    num_cols_label.grid(row=0, column=0, sticky="NESW")
+    num_cols_label.grid(row=0, column=0, pady=20, padx=5, sticky="NESW")
     num_cols_var = IntVar(value=3)
     num_cols_entry = Spinbox(master=settings_window,
                              from_=1, to=10, textvariable=num_cols_var)
-    num_cols_entry.grid(row=0, column=1, sticky="NESW")
+    num_cols_entry.grid(row=0, column=1, pady=20, padx=5, sticky="NESW")
 
-    # create text size label and entry box
-    text_size_label = Label(master=settings_window, text="Text size:")
-    text_size_label.grid(row=1, column=0, sticky="NESW")
-    text_size_var = IntVar(value=12)
-    text_size_entry = Spinbox(master=settings_window,
-                              from_=8, to=24, textvariable=text_size_var)
-    text_size_entry.grid(row=1, column=1, sticky="NESW")
+    # create text size label and entry box (! Deprecated !)
+    # text_size_label = Label(master=settings_window, text="Text size:")
+    # text_size_label.grid(row=1, column=0, sticky="NESW")
+    # text_size_var = IntVar(value=12)
+    # text_size_entry = Spinbox(master=settings_window,
+    #                           from_=8, to=24, textvariable=text_size_var)
+    # text_size_entry.grid(row=1, column=1, sticky="NESW")
 
     # create add entry button
     add_entry_button = Button(master=settings_window,
                               text="Add entry", command=add_entry)
-    add_entry_button.grid(row=2, column=0, sticky="NESW")
+    add_entry_button.grid(row=2, column=0, pady=10, padx=5, sticky="NESW")
 
     # create remove entry button
     remove_entry_button = Button(master=settings_window,
                                  text="Remove entry", command=remove_entry)
-    remove_entry_button.grid(row=2, column=1, sticky="NESW")
+    remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
 
-    # create draw on top toggle
-    draw_on_top_var = BooleanVar(value=False)
-    draw_on_top_toggle = Checkbutton(master=settings_window,
-                                     text="Draw on top", variable=draw_on_top_var)
-    draw_on_top_toggle.grid(row=3, column=0, columnspan=2, sticky="NESW")
+    # create draw on top toggle (! Deprecated !)
+    # draw_on_top_var = BooleanVar(value=False)
+    # draw_on_top_toggle = Checkbutton(master=settings_window,
+    #                                  text="Draw on top", variable=draw_on_top_var)
+    # draw_on_top_toggle.grid(row=3, column=0, columnspan=2, sticky="NESW")
 
     # create cancel button
     add_entry_button = Button(master=settings_window,
                               text="Cancel", command=add_entry)
-    add_entry_button.grid(row=4, column=0, sticky="NESW")
+    add_entry_button.grid(row=3, column=0,  sticky="NESW")
 
     # create save changes button
     # save needs to reload the main window
     # it also
     add_entry_button = Button(master=settings_window,
                               text="Save changes", command=add_entry)
-    add_entry_button.grid(row=4, column=1, sticky="NESW")
+    add_entry_button.grid(row=3, column=1, sticky="NESW")
 
     settings_window.columnconfigure(0, weight=1)
     settings_window.columnconfigure(1, weight=1)
-    for i in range(0, 5):
+    for i in range(0, 4):
         print(i)
         settings_window.rowconfigure(i, weight=1)
 
@@ -217,7 +217,7 @@ def load_paste_dict():
 if __name__ == "__main__":
     main()
 
-# TODO: draw columns down, and do a continuous loop of build, rather than
+# TODO: draw columns down, and do a continuous loop of build, rather than disconnected as it is
 
 # NOTE: deprecated grey button code (not going to implement so scope can stay small):
     # handle colors
