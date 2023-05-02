@@ -10,9 +10,7 @@ from tkinter import font as tkFont
 primary_color = "#DDDDDD"
 secondary_color = "#5A5A5A"
 bright_text_color = "#FAFAFA"
-# settings_text_color = "#EDF263"
 settings_text_color = "#EEEE22"
-# settings_text_color = "#f5d400"
 
 # TODO: rainbow buttons
 # Also TODO: text color difference detect to account for text on rainbow buttons
@@ -42,12 +40,65 @@ def create_palette_window(title="Text Palette", topmost=True):
     return window
 
 
+def add_entry():
+    pass
+
+
+def remove_entry():
+    pass
+
+
 def handle_settings_window():
     settings_window = create_palette_window(title="Text Palette Settings")
 
-    label = Label(master=settings_window,
-                  text="hello this is the settings window!")
-    label.pack()
+    # label = Label(master=settings_window,
+    #               text="hello this is the settings window!")
+    # label.pack()
+
+    # create number of columns label and entry box
+    num_cols_label = Label(master=settings_window, text="Number of columns:")
+    num_cols_label.grid(row=0, column=0, sticky="NESW")
+    num_cols_var = IntVar(value=3)
+    num_cols_entry = Spinbox(master=settings_window,
+                             from_=1, to=10, textvariable=num_cols_var)
+    num_cols_entry.grid(row=0, column=1, sticky="NESW")
+
+    # create text size label and entry box
+    text_size_label = Label(master=settings_window, text="Text size:")
+    text_size_label.grid(row=1, column=0, sticky="NESW")
+    text_size_var = IntVar(value=12)
+    text_size_entry = Spinbox(master=settings_window,
+                              from_=8, to=24, textvariable=text_size_var)
+    text_size_entry.grid(row=1, column=1, sticky="NESW")
+
+    # create add entry button
+    add_entry_button = Button(master=settings_window,
+                              text="Add entry", command=add_entry)
+    add_entry_button.grid(row=2, column=0, sticky="NESW")
+
+    # create remove entry button
+    remove_entry_button = Button(master=settings_window,
+                                 text="Remove entry", command=remove_entry)
+    remove_entry_button.grid(row=2, column=1, sticky="NESW")
+
+    # create use rainbow colors toggle
+    use_rainbow_var = BooleanVar(value=True)
+    use_rainbow_toggle = Checkbutton(master=settings_window,
+                                     text="Use rainbow colors", variable=use_rainbow_var)
+    use_rainbow_toggle.grid(row=3, column=0, columnspan=2, sticky="NESW")
+
+    # create draw on top toggle
+    draw_on_top_var = BooleanVar(value=False)
+    draw_on_top_toggle = Checkbutton(master=settings_window,
+                                     text="Draw on top", variable=draw_on_top_var)
+    draw_on_top_toggle.grid(row=4, column=0, columnspan=2, sticky="NESW")
+
+    settings_window.columnconfigure(0, weight=1)
+    settings_window.columnconfigure(1, weight=1)
+    for i in range(0, 5):
+        print(i)
+        settings_window.rowconfigure(i, weight=1)
+
     settings_window.mainloop()
 
 # def get_grey_color():
