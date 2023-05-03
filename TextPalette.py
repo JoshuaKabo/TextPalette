@@ -17,6 +17,13 @@ settings_text_color = "#EEEE22"
 # could theoretically store window size, num cols, etc
 user_prefs = {}
 
+desired_cols = 9
+
+
+# NOTE! IMPORTANT! USE LAMBDA EXPRESSIONS OFTEN WHEN USING BUTTONS
+# ESPECIALLY BECAUSE THEY DON'T PROBE THE ACTIONS FIRST, RESULTING IN AN EARLY RELOAD OR OTHER BROKEN BEHAVIOR!!
+# ALSO THEY HELP SO MUCH WHEN PASSING DATA AROUND!!
+
 
 def select_alternating_colors(use_primary):
     used_primary_bg = primary_color if use_primary else secondary_color
@@ -42,7 +49,65 @@ def create_palette_window(title="Text Palette", topmost=True):
     return window
 
 
-def add_entry():
+def prompt_remove_entry():
+    # use a dropdown (that'll be easiest lol)
+    pass
+
+
+def prompt_add_entry():
+    add_entry_window = create_palette_window("Add An Entry")
+
+    def check_save_button_state(*args):
+        if (len(name_entry.get()) > 0 and len(value_entry.get()) > 0):
+            save_button.config(state=NORMAL)
+        else:
+            save_button.config(state=DISABLED)
+
+    # region name
+    name_label = Label(master=add_entry_window, text="Name:")
+    name_label.grid(row=0, column=0, pady=10, padx=5, sticky="NESW")
+    # Entry for name
+    name_entry = Entry(master=add_entry_window)
+    name_entry.grid(row=0, column=1, pady=10, padx=5, sticky="NESW")
+    name_entry.bind('<KeyRelease>', check_save_button_state)
+    # endregion
+
+    # region value
+    value_label = Label(master=add_entry_window, text="Entry:")
+    value_label.grid(row=1, column=0, pady=10, padx=5, sticky="NESW")
+    # Entry for value
+    value_entry = Entry(master=add_entry_window)
+    value_entry.grid(row=1, column=1, pady=10, padx=5, sticky="NESW")
+    value_entry.bind('<KeyRelease>', check_save_button_state)
+    # endregion
+
+    # region save/cancel
+    cancel_button = Button(master=add_entry_window,
+                           text="Cancel", command=add_entry_window.destroy)
+    cancel_button.grid(row=3, column=0, sticky="NESW")
+    # save button:
+
+    def save_entry():
+        write_addition_to_file(name_entry.get(), value_entry.get())
+    save_button = Button(master=add_entry_window,
+                         text="Save changes", command=save_entry, state=DISABLED)
+    save_button.grid(row=3, column=1, columnspan=1, sticky="NESW")
+    # endregion
+
+    add_entry_window.mainloop()
+
+    # 4 cols:
+    # Name: ____ Entry: _____
+    # 2 cols both expand met:
+    # [Cancel] [Save]
+    # save will call write addition to file
+
+
+def write_addition_to_file(name, value):
+    # open the file, add to end
+    # appending_paste_dict = open()
+    print(name)
+    print(value)
     pass
 
 
@@ -71,12 +136,12 @@ def handle_settings_window():
 
     # create add entry button
     add_entry_button = Button(master=settings_window,
-                              text="Add entry", command=add_entry)
+                              text="+ Add entry", command=prompt_add_entry)
     add_entry_button.grid(row=2, column=0, pady=10, padx=5, sticky="NESW")
 
     # create remove entry button
     remove_entry_button = Button(master=settings_window,
-                                 text="Remove entry", command=remove_entry)
+                                 text="- Remove entry", command=prompt_remove_entry)
     remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
 
     # create draw on top toggle (! Deprecated !)
@@ -88,25 +153,24 @@ def handle_settings_window():
     # create cancel button
     add_entry_button = Button(master=settings_window,
                               text="Cancel", command=settings_window.destroy)
-    add_entry_button.grid(row=3, column=0,  sticky="NESW")
+    add_entry_button.grid(row=3, column=0, sticky="NESW")
 
     # create save changes button
     # save needs to reload the main window
     # it also
     add_entry_button = Button(master=settings_window,
-                              text="Save changes", command=add_entry)
+                              text="Save changes", command=prompt_add_entry)
     add_entry_button.grid(row=3, column=1, sticky="NESW")
 
     settings_window.columnconfigure(0, weight=1)
     settings_window.columnconfigure(1, weight=1)
     for i in range(0, 4):
-        print(i)
         settings_window.rowconfigure(i, weight=1)
 
     settings_window.mainloop()
 
 
-def clear_buttons(buttonarr, window, helv12):
+def reload_buttons(buttonarr, window, helv12):
 
     use_primary = True
 
@@ -116,8 +180,6 @@ def clear_buttons(buttonarr, window, helv12):
     paste_dict = load_paste_dict()
 
     curr_ind = 0
-
-    desired_cols = 9
 
     for key in paste_dict.keys():
 
@@ -129,7 +191,6 @@ def clear_buttons(buttonarr, window, helv12):
             use_primary)
 
         # overwrite for color test
-        print(select_rgb_color(curr_ind, len(paste_dict)-1))
         used_primary_bg = (select_rgb_color(curr_ind, len(paste_dict)-1))
 
         # make button
@@ -165,7 +226,7 @@ def main():
     desired_cols = 9
 
     button_arr = []
-    clearret = clear_buttons(button_arr, window, helv12)
+    clearret = reload_buttons(button_arr, window, helv12)
 
     button_arr = clearret[0]
     curr_ind = clearret[1]
@@ -180,7 +241,7 @@ def main():
     used_primary_bg = secondary_color
 
     settings_button = create_palette_button(window, "Settings", helv12, used_primary_bg,
-                                            used_secondary_bg, settings_text_color, handler=lambda: clear_buttons(button_arr, window, helv12))
+                                            used_secondary_bg, settings_text_color, handler=handle_settings_window)
     settings_button.grid(row=curr_row, column=curr_col, sticky="NESW")
 
     window.columnconfigure(curr_col, weight=1)
@@ -253,3 +314,5 @@ if __name__ == "__main__":
     #         use_primary = curr_row % 2 == 1
     # else:
     #     use_primary = not use_primary
+
+# NOTE: Don't forget that the next step is as much autofill as you can possibly manage
