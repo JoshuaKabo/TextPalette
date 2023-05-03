@@ -50,8 +50,37 @@ def create_palette_window(title="Text Palette", topmost=True):
 
 
 def prompt_remove_entry():
-    # use a dropdown (that'll be easiest lol)
-    pass
+    def print_change(*args):
+        print("hello")
+
+    remove_entry_window = create_palette_window("Remove An Entry")
+
+    # the list part of the scroll list
+    names_list = Listbox(remove_entry_window)
+    names_list.pack(side=LEFT, fill=BOTH)
+
+    # the scroll part
+    scrollbar = Scrollbar(remove_entry_window)
+    scrollbar.pack(side=RIGHT, fill=BOTH)
+
+    # insert elems
+    for value in range(200):
+        names_list.insert(END, value)
+
+    # attach listbox to scrollbar
+    names_list.config(yscrollcommand=scrollbar.set)
+
+    # scrollbar command param
+    scrollbar.config(command=names_list.yview)
+
+    # bind for selection change to check if save should be greyed out
+    names_list.bind('<ButtonRelease>', print_change)
+    names_list.bind('<KeyRelease>', print_change)
+
+    remove_entry_window.mainloop()
+
+    # cancel and save at the bottom
+    # make save grey out unless something is selected
 
 
 def prompt_add_entry():
