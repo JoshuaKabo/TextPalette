@@ -345,3 +345,7 @@ if __name__ == "__main__":
     #     use_primary = not use_primary
 
 # NOTE: Don't forget that the next step is as much autofill as you can possibly manage
+
+
+# TODO:
+# Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD (MAYBE EVEN COPY FOR YOUU!!!)
