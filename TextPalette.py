@@ -50,18 +50,27 @@ def create_palette_window(title="Text Palette", topmost=True):
 
 
 def prompt_remove_entry():
-    def print_change(*args):
-        print("hello")
 
     remove_entry_window = create_palette_window("Remove An Entry")
 
+    def check_del_button_state(*args):
+        print(name_selection.get())
+        # need to check the selection
+        if (len(name_selection.get()) > 0):
+            del_entry_button.config(state=NORMAL)
+        else:
+            del_entry_button.config(state=DISABLED)
+
     # the list part of the scroll list
-    names_list = Listbox(remove_entry_window)
-    names_list.pack(side=LEFT, fill=BOTH)
+    name_selection = StringVar()
+    names_list = Listbox(remove_entry_window, listvariable=name_selection)
+    names_list.grid(row=0, column=0, columnspan=2, sticky="WEN")
+    # names_list.pack(side=LEFT, fill=BOTH)
 
     # the scroll part
     scrollbar = Scrollbar(remove_entry_window)
-    scrollbar.pack(side=RIGHT, fill=BOTH)
+    scrollbar.grid(row=0, column=1, sticky="SEN")
+    # scrollbar.pack(side=RIGHT, fill=BOTH)
 
     # insert elems
     for value in range(200):
@@ -74,8 +83,24 @@ def prompt_remove_entry():
     scrollbar.config(command=names_list.yview)
 
     # bind for selection change to check if save should be greyed out
-    names_list.bind('<ButtonRelease>', print_change)
-    names_list.bind('<KeyRelease>', print_change)
+    names_list.bind('<ButtonRelease>', check_del_button_state)
+    names_list.bind('<KeyRelease>', check_del_button_state)
+
+    # create cancel button
+    cancel_button = Button(master=remove_entry_window,
+                           text="Cancel", command=remove_entry_window.destroy)
+    cancel_button.grid(row=1, column=0)
+
+    # add_entry_button.grid(row=3, column=0, sticky="NESW")
+
+    # create save changes button
+    # save needs to reload the main window
+    # it also needs to update in every possible place
+    del_entry_button = Button(master=remove_entry_window,
+                              text="Delete Entry", state=DISABLED)
+    del_entry_button.grid(row=1, column=1)
+
+    # add_entry_button.grid(row=3, column=1, sticky="NESW")
 
     remove_entry_window.mainloop()
 
@@ -124,12 +149,6 @@ def prompt_add_entry():
     # endregion
 
     add_entry_window.mainloop()
-
-    # 4 cols:
-    # Name: ____ Entry: _____
-    # 2 cols both expand met:
-    # [Cancel] [Save]
-    # save will call write addition to file
 
 
 def write_addition_to_file(name, value):
