@@ -186,7 +186,7 @@ def handle_settings_window(paste_dict):
     num_cols_label.grid(row=0, column=0, pady=20, padx=5, sticky="NESW")
     num_cols_var = IntVar(value=3)
     num_cols_entry = Spinbox(master=settings_window,
-                             from_=1, to=10, textvariable=num_cols_var)
+                             from_=1, to=99, textvariable=num_cols_var)
     num_cols_entry.grid(row=0, column=1, pady=20, padx=5, sticky="NESW")
 
     # create add entry button
@@ -363,6 +363,13 @@ if __name__ == "__main__":
 # the main display reloads its paste_dict
 # the buttons reload
 
-# TODO: create a warning when user attempts to create a duplicate key
 # TODO: refresh main ui when appropriate !! Start with column update, that should be the easiest!
+# So I need to delete the old ones and generate the new ones
+# maybe, whenever the box is closed, I can regen!
+# column number saving.... tricky...
 # TODO: column logic, cannot be more than num elements
+
+# Scope walkback - not working
+# I think I know what I need to do.
+# I need to start a new project, with a main window: {label, button}, button opens second window (close), each close updates the main window
+# it'll likely need classes. However I do it, it'll set me up for reload in textpalette.
