@@ -49,19 +49,20 @@ def create_palette_window(title="Text Palette", topmost=True):
     return window
 
 
-def prompt_remove_entry():
+def prompt_remove_entry(paste_dict):
 
     remove_entry_window = create_palette_window("Remove An Entry")
 
-    def check_del_button_state(*args):
-        print(names_list.curselection())
+    def retrieve_and_remove_selection(*args):
+        remove_entry(names_list.get(names_list.curselection()[0]))
 
-        # print(names_list.get(0))
-        # need to check the selection
-        # if (len(names_list.get(0)) > 0):
-        #     del_entry_button.config(state=NORMAL)
-        # else:
-        #     del_entry_button.config(state=DISABLED)
+    def check_del_button_state(*args):
+        try:
+            if (names_list.curselection()[0] >= 0 and names_list.curselection()[0] < len(paste_dict)):
+                del_entry_button.config(state=NORMAL)
+        except:
+            # no selection or other problem
+            del_entry_button.config(state=DISABLED)
 
     # the list part of the scroll list
     # name_selection = StringVar()
@@ -75,10 +76,10 @@ def prompt_remove_entry():
     # scrollbar.pack(side=RIGHT, fill=BOTH)
 
     # insert elems
-    for value in range(200):
-        names_list.insert(END, value)
+    for key in paste_dict.keys():
+        names_list.insert(END, key)
 
-    # attach listbox to scrollbar
+        # attach listbox to scrollbar
     names_list.config(yscrollcommand=scrollbar.set)
 
     # scrollbar command param
@@ -99,7 +100,7 @@ def prompt_remove_entry():
     # save needs to reload the main window
     # it also needs to update in every possible place
     del_entry_button = Button(master=remove_entry_window,
-                              text="Delete Entry", state=DISABLED)
+                              text="Delete Entry", state=DISABLED, command=retrieve_and_remove_selection)
     del_entry_button.grid(row=1, column=1)
 
     # add_entry_button.grid(row=3, column=1, sticky="NESW")
@@ -161,11 +162,11 @@ def write_addition_to_file(name, value):
     pass
 
 
-def remove_entry():
-    pass
+def remove_entry(key):
+    print(key)
 
 
-def handle_settings_window():
+def handle_settings_window(paste_dict):
     settings_window = create_palette_window(title="Text Palette Settings")
 
     # create number of columns label and entry box
@@ -191,7 +192,7 @@ def handle_settings_window():
 
     # create remove entry button
     remove_entry_button = Button(master=settings_window,
-                                 text="- Remove entry", command=prompt_remove_entry)
+                                 text="- Remove entry", command=lambda: prompt_remove_entry(paste_dict))
     remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
 
     # create draw on top toggle (! Deprecated !)
@@ -291,7 +292,7 @@ def main():
     used_primary_bg = secondary_color
 
     settings_button = create_palette_button(window, "Settings", helv12, used_primary_bg,
-                                            used_secondary_bg, settings_text_color, handler=handle_settings_window)
+                                            used_secondary_bg, settings_text_color, handler=lambda: handle_settings_window(paste_dict))
     settings_button.grid(row=curr_row, column=curr_col, sticky="NESW")
 
     window.columnconfigure(curr_col, weight=1)
@@ -370,3 +371,9 @@ if __name__ == "__main__":
 
 # TODO:
 # Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD (MAYBE EVEN COPY FOR YOUU!!!)
+
+# Modification flow:
+# a request for insert / delete is made
+# the file is updated
+# the main display reloads its paste_dict
+# the buttons reload
