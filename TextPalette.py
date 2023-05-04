@@ -68,12 +68,10 @@ def prompt_remove_entry(paste_dict):
     # name_selection = StringVar()
     names_list = Listbox(remove_entry_window)
     names_list.grid(row=0, column=0, columnspan=2, sticky="WEN")
-    # names_list.pack(side=LEFT, fill=BOTH)
 
     # the scroll part
     scrollbar = Scrollbar(remove_entry_window)
     scrollbar.grid(row=0, column=1, sticky="SEN")
-    # scrollbar.pack(side=RIGHT, fill=BOTH)
 
     # insert elems
     for key in paste_dict.keys():
@@ -93,8 +91,6 @@ def prompt_remove_entry(paste_dict):
     cancel_button = Button(master=remove_entry_window,
                            text="Cancel", command=remove_entry_window.destroy)
     cancel_button.grid(row=1, column=0)
-
-    # add_entry_button.grid(row=3, column=0, sticky="NESW")
 
     # create save changes button
     # save needs to reload the main window
@@ -190,14 +186,6 @@ def handle_settings_window(paste_dict):
                              from_=1, to=10, textvariable=num_cols_var)
     num_cols_entry.grid(row=0, column=1, pady=20, padx=5, sticky="NESW")
 
-    # create text size label and entry box (! Deprecated !)
-    # text_size_label = Label(master=settings_window, text="Text size:")
-    # text_size_label.grid(row=1, column=0, sticky="NESW")
-    # text_size_var = IntVar(value=12)
-    # text_size_entry = Spinbox(master=settings_window,
-    #                           from_=8, to=24, textvariable=text_size_var)
-    # text_size_entry.grid(row=1, column=1, sticky="NESW")
-
     # create add entry button
     add_entry_button = Button(master=settings_window,
                               text="+ Add entry", command=prompt_add_entry)
@@ -207,12 +195,6 @@ def handle_settings_window(paste_dict):
     remove_entry_button = Button(master=settings_window,
                                  text="- Remove entry", command=lambda: prompt_remove_entry(paste_dict))
     remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
-
-    # create draw on top toggle (! Deprecated !)
-    # draw_on_top_var = BooleanVar(value=False)
-    # draw_on_top_toggle = Checkbutton(master=settings_window,
-    #                                  text="Draw on top", variable=draw_on_top_var)
-    # draw_on_top_toggle.grid(row=3, column=0, columnspan=2, sticky="NESW")
 
     # create cancel button
     add_entry_button = Button(master=settings_window,
@@ -368,19 +350,6 @@ if __name__ == "__main__":
     main()
 
 # TODO: draw columns down, and do a continuous loop of build, rather than disconnected as it is
-
-# NOTE: deprecated grey button code (not going to implement so scope can stay small):
-    # handle colors
-    # if (desired_cols % 2 == 0):
-    #     if (curr_col % 2 == 0):
-    #         use_primary = curr_row % 2 == 0
-    #     else:
-    #         use_primary = curr_row % 2 == 1
-    # else:
-    #     use_primary = not use_primary
-
-# NOTE: Don't forget that the next step is as much autofill as you can possibly manage
-
 
 # TODO:
 # Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD (MAYBE EVEN COPY FOR YOUU!!!)
