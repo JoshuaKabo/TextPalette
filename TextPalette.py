@@ -6,6 +6,7 @@ import colorsys
 import pyautogui
 from tkinter import *
 from tkinter import font as tkFont
+from tkinter import messagebox
 
 # theme constants
 primary_color = "#DDDDDD"
@@ -99,15 +100,13 @@ def prompt_remove_entry(paste_dict):
                               text="Delete Entry", state=DISABLED, command=retrieve_and_remove_selection)
     del_entry_button.grid(row=1, column=1)
 
-    # add_entry_button.grid(row=3, column=1, sticky="NESW")
-
     remove_entry_window.mainloop()
 
     # cancel and save at the bottom
     # make save grey out unless something is selected
 
 
-def prompt_add_entry():
+def prompt_add_entry(paste_dict):
     add_entry_window = create_palette_window("Add An Entry")
 
     def check_save_button_state(*args):
@@ -141,9 +140,13 @@ def prompt_add_entry():
     # save button:
 
     def save_entry():
-        write_addition_to_file(name_entry.get(), value_entry.get())
-        add_entry_window.destroy()
-        # TODO: reload somewhere here????
+        if (not name_entry.get() in paste_dict.keys()):
+            write_addition_to_file(name_entry.get(), value_entry.get())
+            add_entry_window.destroy()
+            # TODO: reload somewhere here????
+        else:
+            messagebox.showerror(
+                "ENTRY REJECTED", "Duplicate name entered! \nPlease enter a name that is not already in use!!")
     save_button = Button(master=add_entry_window,
                          text="Save changes", command=save_entry, state=DISABLED)
     save_button.grid(row=3, column=1, columnspan=1, sticky="NESW")
@@ -188,7 +191,7 @@ def handle_settings_window(paste_dict):
 
     # create add entry button
     add_entry_button = Button(master=settings_window,
-                              text="+ Add entry", command=prompt_add_entry)
+                              text="+ Add entry", command=lambda: prompt_add_entry(paste_dict))
     add_entry_button.grid(row=2, column=0, pady=10, padx=5, sticky="NESW")
 
     # create remove entry button
@@ -197,16 +200,16 @@ def handle_settings_window(paste_dict):
     remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
 
     # create cancel button
-    add_entry_button = Button(master=settings_window,
-                              text="Cancel", command=settings_window.destroy)
-    add_entry_button.grid(row=3, column=0, sticky="NESW")
+    cancel_button = Button(master=settings_window,
+                           text="Cancel", command=settings_window.destroy)
+    cancel_button.grid(row=3, column=0, sticky="NESW")
 
     # create save changes button
     # save needs to reload the main window
-    # it also
-    add_entry_button = Button(master=settings_window,
-                              text="Save changes", command=prompt_add_entry)
-    add_entry_button.grid(row=3, column=1, sticky="NESW")
+    # TODO: reload on save!!
+    save_button = Button(master=settings_window,
+                         text="Save changes", command=lambda: prompt_add_entry(paste_dict))
+    save_button.grid(row=3, column=1, sticky="NESW")
 
     settings_window.columnconfigure(0, weight=1)
     settings_window.columnconfigure(1, weight=1)
