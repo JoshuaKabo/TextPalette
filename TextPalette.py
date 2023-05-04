@@ -146,6 +146,8 @@ def prompt_add_entry():
 
     def save_entry():
         write_addition_to_file(name_entry.get(), value_entry.get())
+        add_entry_window.destroy()
+        # TODO: reload somewhere here????
     save_button = Button(master=add_entry_window,
                          text="Save changes", command=save_entry, state=DISABLED)
     save_button.grid(row=3, column=1, columnspan=1, sticky="NESW")
@@ -155,15 +157,26 @@ def prompt_add_entry():
 
 
 def write_addition_to_file(name, value):
-    # open the file, add to end
-    # appending_paste_dict = open()
-    print(name)
-    print(value)
-    pass
+    to_append = open("paste_dict.txt", "a")
+    to_append.write("\n%s~%s" % (name, value))
+    to_append.close()
 
 
 def remove_entry(key):
-    print(key)
+    # read in paste_dict data
+    with open("paste_dict.txt", "r") as file_rd:
+        read_lines = file_rd.readlines()
+    # write it back when it shouldn't be deleted
+    with open("paste_dict.txt", "w") as file_wt:
+        curr_ind = 0
+        for line in read_lines:
+            line = line.strip("\n")
+            # check keys for desired
+            if (not key in line.split("~")[0]):
+                if (curr_ind != 0):
+                    line = "\n"+line
+                file_wt.write(line)
+                curr_ind += 1
 
 
 def handle_settings_window(paste_dict):
@@ -377,3 +390,7 @@ if __name__ == "__main__":
 # the file is updated
 # the main display reloads its paste_dict
 # the buttons reload
+
+# TODO: create a warning when user attempts to create a duplicate key
+# TODO: refresh main ui when appropriate !! Start with column update, that should be the easiest!
+# TODO: column logic, cannot be more than num elements
