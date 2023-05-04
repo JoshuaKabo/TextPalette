@@ -54,20 +54,18 @@ def prompt_remove_entry():
     remove_entry_window = create_palette_window("Remove An Entry")
 
     def check_del_button_state(*args):
-        print(name_selection.get())
-        # need to check the selection
-        if (len(name_selection.get()) > 0):
-            del_entry_button.config(state=NORMAL)
-        else:
-            del_entry_button.config(state=DISABLED)
+        print(names_list.curselection())
 
-    items = dir()
-    var = StringVar()
-    var.set(items)
+        # print(names_list.get(0))
+        # need to check the selection
+        # if (len(names_list.get(0)) > 0):
+        #     del_entry_button.config(state=NORMAL)
+        # else:
+        #     del_entry_button.config(state=DISABLED)
 
     # the list part of the scroll list
     # name_selection = StringVar()
-    names_list = Listbox(remove_entry_window, listvariable=var)
+    names_list = Listbox(remove_entry_window)
     names_list.grid(row=0, column=0, columnspan=2, sticky="WEN")
     # names_list.pack(side=LEFT, fill=BOTH)
 
@@ -77,8 +75,8 @@ def prompt_remove_entry():
     # scrollbar.pack(side=RIGHT, fill=BOTH)
 
     # insert elems
-    # for value in range(200):
-    #     names_list.insert(END, value)
+    for value in range(200):
+        names_list.insert(END, value)
 
     # attach listbox to scrollbar
     names_list.config(yscrollcommand=scrollbar.set)
