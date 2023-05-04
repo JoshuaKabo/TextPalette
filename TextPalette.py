@@ -3,6 +3,7 @@ import pyperclip
 import pickle
 import math
 import colorsys
+import pyautogui
 from tkinter import *
 from tkinter import font as tkFont
 
@@ -12,7 +13,6 @@ secondary_color = "#5A5A5A"
 bright_text_color = "#FAFAFA"
 settings_text_color = "#EEEE22"
 
-# TODO: text color difference detect to account for text on rainbow buttons
 
 # could theoretically store window size, num cols, etc
 user_prefs = {}
@@ -61,9 +61,13 @@ def prompt_remove_entry():
         else:
             del_entry_button.config(state=DISABLED)
 
+    items = dir()
+    var = StringVar()
+    var.set(items)
+
     # the list part of the scroll list
-    name_selection = StringVar()
-    names_list = Listbox(remove_entry_window, listvariable=name_selection)
+    # name_selection = StringVar()
+    names_list = Listbox(remove_entry_window, listvariable=var)
     names_list.grid(row=0, column=0, columnspan=2, sticky="WEN")
     # names_list.pack(side=LEFT, fill=BOTH)
 
@@ -73,8 +77,8 @@ def prompt_remove_entry():
     # scrollbar.pack(side=RIGHT, fill=BOTH)
 
     # insert elems
-    for value in range(200):
-        names_list.insert(END, value)
+    # for value in range(200):
+    #     names_list.insert(END, value)
 
     # attach listbox to scrollbar
     names_list.config(yscrollcommand=scrollbar.set)
