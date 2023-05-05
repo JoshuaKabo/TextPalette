@@ -66,8 +66,10 @@ def create_palette_window(title="Text Palette", topmost=True):
 
 # def prompt_remove_entry(paste_dict):
 class RemoveEntryWindow:
-    def __init__(self):
-        self.remove_entry_window_master = create_palette_window("Remove An Entry")
+    def __init__(self, parent):
+        self.remove_entry_window_master = Toplevel(parent.window)
+        self.remove_entry_window_master.title("Remove An Entry")
+        # self.remove_entry_window_master = create_palette_window("Remove An Entry")
 
         def retrieve_and_remove_selection(*args):
             remove_entry(self.names_list.get(self.names_list.curselection()[0]))
@@ -139,8 +141,9 @@ class RemoveEntryWindow:
 
 # def prompt_add_entry(paste_dict):
 class AddEntryWindow:
-    def __init__(self):
-        self.add_entry_window_master = create_palette_window("Add An Entry")
+    def __init__(self, parent):
+        self.add_entry_window_master = Toplevel(parent.window)
+        self.add_entry_window_master.title("Add An Entry")
 
         def check_save_button_state(*args):
             if len(name_entry.get()) > 0 and len(value_entry.get()) > 0:
@@ -257,7 +260,7 @@ class SettingsWindow:
 
         # create remove entry button
         self.remove_entry_button = Button(
-            master=settings_window_master,
+            master=self.settings_window_master,
             text="- Remove entry",
             command=lambda: prompt_remove_entry(paste_dict),
         )
@@ -265,9 +268,9 @@ class SettingsWindow:
 
         # create cancel button
         self.cancel_button = Button(
-            master=settings_window_master,
+            master=self.settings_window_master,
             text="Cancel",
-            command=settings_window_master.destroy,
+            command=self.settings_window_master.destroy,
         )
         self.cancel_button.grid(row=3, column=0, sticky="NESW")
 
@@ -275,7 +278,7 @@ class SettingsWindow:
         # save needs to reload the main window
         # TODO: reload on save!!
         self.save_button = Button(
-            master=settings_window_master,
+            master=self.settings_window_master,
             text="Save changes",
             command=lambda: prompt_add_entry(paste_dict),
         )
@@ -305,14 +308,15 @@ class TextPaletteWindow:
 
         self.helv12 = tkFont.Font(family="Helvetica", size=12, weight="bold")
 
-        # NOTE: regen buttons after an update happens (that way all the callbacks will behave the way I want them to.)
-
         self.desired_cols = 9
 
         self.button_arr = []
         self.reload_palette_buttons()
 
         self.window.mainloop()
+
+    def open_settings_window(self):
+        self.settings_window = SettingsWindow(self)
 
     def reload_palette_buttons(self):
         # clear out the old buttons
@@ -365,7 +369,7 @@ class TextPaletteWindow:
             primary_light_grey,
             settings_text_color,
             # handler=self.reload_palette_buttons,
-            handler=lambda: handle_settings_window(self.paste_dict),
+            handler=self.open_settings_window,
         )
         self.settings_button.grid(
             row=self.curr_row, column=self.curr_col, sticky="NESW"
@@ -377,9 +381,6 @@ class TextPaletteWindow:
         self.button_arr.append(self.settings_button)
 
         # endregion
-
-    def open_settings_window(self):
-        self.settings_window = SettingsWindow(self)
 
 
 def lerp(a, b, t):
