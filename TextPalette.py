@@ -9,8 +9,9 @@ from tkinter import font as tkFont
 from tkinter import messagebox
 
 # theme constants
-primary_color = "#DDDDDD"
-secondary_color = "#5A5A5A"
+primary_light_grey = "#DDDDDD"
+secondary_dark_grey = "#5A5A5A"
+primary_text_color = "black"
 bright_text_color = "#FAFAFA"
 settings_text_color = "#EEEE22"
 
@@ -273,49 +274,6 @@ class settings_window:
         self.settings_window_master.mainloop()
 
 
-def reload_buttons(buttonarr, window, helv12):
-    for button in buttonarr:
-        button.destroy()
-
-    paste_dict = load_paste_dict()
-
-    curr_ind = 0
-
-    for key in paste_dict.keys():
-        # handle positioning
-        curr_col = curr_ind % desired_cols
-        curr_row = math.floor(curr_ind / desired_cols)
-
-        used_primary_bg, used_secondary_bg, used_text_color = select_alternating_colors(
-            use_primary
-        )
-
-        # overwrite for color test
-        used_primary_bg = select_rgb_color(curr_ind, len(paste_dict) - 1)
-
-        # make button
-        button = create_palette_button(
-            window,
-            key,
-            helv12,
-            used_primary_bg,
-            used_secondary_bg,
-            "black",
-            paste_dict=paste_dict,
-        )
-
-        button.grid(row=curr_row, column=curr_col, sticky="NESW")
-
-        buttonarr.append(button)
-
-        window.columnconfigure(curr_col, weight=1)
-        window.rowconfigure(curr_row, weight=1)
-
-        curr_ind += 1
-
-    return buttonarr, curr_ind
-
-
 # def main():
 class text_palette_window:
     def __init__(self):
@@ -327,39 +285,64 @@ class text_palette_window:
 
         # NOTE: regen buttons after an update happens (that way all the callbacks will behave the way I want them to.)
 
-        (
-            self.used_primary_bg,
-            self.used_secondary_bg,
-            self.used_text_color,
-        ) = select_alternating_colors(self.use_primary)
-
         self.desired_cols = 9
 
         self.button_arr = []
-        self.clearret = reload_buttons(self.button_arr, self.window, self.helv12)
+        self.reload_palette_buttons()
 
-        self.button_arr = self.clearret[0]
-        self.curr_ind = self.clearret[1]
+        self.window.mainloop()
 
+    def reload_palette_buttons(self):
+        # clear out the old buttons
+        for button in self.button_arr:
+            button.destroy()
+
+        # re-read what's available
+        paste_dict = load_paste_dict()
+
+        # region key-val buttons
+        self.curr_ind = 0
+        for key in paste_dict.keys():
+            # handle positioning
+            curr_col = self.curr_ind % desired_cols
+            curr_row = math.floor(self.curr_ind / desired_cols)
+
+            # overwrite for color test
+            primary_bg = select_rgb_color(self.curr_ind, len(paste_dict) - 1)
+
+            # make button
+            button = create_palette_button(
+                self.window,
+                key,
+                self.helv12,
+                primary_bg,
+                secondary_dark_grey,
+                "black",
+                paste_dict=paste_dict,
+            )
+
+            button.grid(row=curr_row, column=curr_col, sticky="NESW")
+
+            self.button_arr.append(button)
+
+            self.window.columnconfigure(curr_col, weight=1)
+            self.window.rowconfigure(curr_row, weight=1)
+
+            self.curr_ind += 1
+        # endregion
+
+        # region settings button
         self.curr_col = self.curr_ind % desired_cols
         self.curr_row = math.floor(self.curr_ind / desired_cols)
-
-        (
-            self.used_primary_bg,
-            self.used_secondary_bg,
-            self.used_text_color,
-        ) = select_alternating_colors(self.use_primary)
-
-        # overwrite for color test
-        self.used_primary_bg = secondary_color
 
         self.settings_button = create_palette_button(
             self.window,
             "Settings",
             self.helv12,
-            self.used_primary_bg,
-            self.used_secondary_bg,
-            self.settings_text_color,
+            secondary_dark_grey,
+            primary_light_grey,
+            settings_text_color,
+            # handler=self.reload_palette_buttons,
             handler=lambda: handle_settings_window(self.paste_dict),
         )
         self.settings_button.grid(
@@ -369,7 +352,9 @@ class text_palette_window:
         self.window.columnconfigure(self.curr_col, weight=1)
         self.window.rowconfigure(self.curr_row, weight=1)
 
-        self.window.mainloop()
+        self.button_arr.append(self.settings_button)
+
+        # endregion
 
 
 def lerp(a, b, t):
@@ -423,7 +408,7 @@ def load_paste_dict():
 
 
 if __name__ == "__main__":
-    main()
+    main_widow = text_palette_window()
 
 # TODO: draw columns down, and do a continuous loop of build, rather than disconnected as it is
 
