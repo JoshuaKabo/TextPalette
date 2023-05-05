@@ -19,13 +19,6 @@ settings_text_color = "#EEEE22"
 # could theoretically store window size, num cols, etc
 user_prefs = {}
 
-desired_cols = 9
-
-
-# NOTE! IMPORTANT! USE LAMBDA EXPRESSIONS OFTEN WHEN USING BUTTONS
-# ESPECIALLY BECAUSE THEY DON'T PROBE THE ACTIONS FIRST, RESULTING IN AN EARLY RELOAD OR OTHER BROKEN BEHAVIOR!!
-# ALSO THEY HELP SO MUCH WHEN PASSING DATA AROUND!!
-
 
 def create_palette_button(
     master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE
@@ -235,8 +228,7 @@ def remove_entry(key):
 
 class SettingsWindow:
     def apply_changes(self):
-        self.parent.update_desired_cols(2)
-        print("TODO: HOOK UP COLS")
+        self.parent.update_display_info(self.num_cols_var.get())
         self.on_close()
 
     def __init__(self, parent):
@@ -250,7 +242,7 @@ class SettingsWindow:
             master=self.settings_window_master, text="Number of columns:"
         )
         self.num_cols_label.grid(row=0, column=0, pady=20, padx=5, sticky="NESW")
-        self.num_cols_var = IntVar(value=3)
+        self.num_cols_var = IntVar(value=parent.desired_cols)
         self.num_cols_entry = Spinbox(
             master=self.settings_window_master,
             from_=1,
@@ -306,7 +298,6 @@ class SettingsWindow:
         self.settings_window_master.destroy()
 
 
-# def main():
 class TextPaletteWindow:
     def __init__(self):
         self.window = create_palette_window()
@@ -325,8 +316,8 @@ class TextPaletteWindow:
     def open_settings_window(self):
         self.settings_window = SettingsWindow(self)
 
-    def update_desired_cols(self, new_val):
-        self.desired_cols = new_val
+    def update_display_info(self, num_cols):
+        self.desired_cols = num_cols
 
     def reload_palette_buttons(self):
         # clear out the old buttons
@@ -340,8 +331,8 @@ class TextPaletteWindow:
         self.curr_ind = 0
         for key in paste_dict.keys():
             # handle positioning
-            curr_col = self.curr_ind % desired_cols
-            curr_row = math.floor(self.curr_ind / desired_cols)
+            curr_col = self.curr_ind % self.desired_cols
+            curr_row = math.floor(self.curr_ind / self.desired_cols)
 
             # overwrite for color test
             primary_bg = select_rgb_color(self.curr_ind, len(paste_dict) - 1)
@@ -368,8 +359,8 @@ class TextPaletteWindow:
         # endregion
 
         # region settings button
-        self.curr_col = self.curr_ind % desired_cols
-        self.curr_row = math.floor(self.curr_ind / desired_cols)
+        self.curr_col = self.curr_ind % self.desired_cols
+        self.curr_row = math.floor(self.curr_ind / self.desired_cols)
 
         self.settings_button = create_palette_button(
             self.window,
@@ -467,3 +458,5 @@ if __name__ == "__main__":
 # I think I know what I need to do.
 # I need to start a new project, with a main window: {label, button}, button opens second window (close), each close updates the main window
 # it'll likely need classes. However I do it, it'll set me up for reload in textpalette.
+
+# TODO: pickle user prefs!
