@@ -59,14 +59,17 @@ def create_palette_window(title="Text Palette", topmost=True):
 
 # def prompt_remove_entry(paste_dict):
 class RemoveEntryWindow:
-    def __init__(self, parent):
-        self.remove_entry_window_master = Toplevel(parent.window)
-        self.remove_entry_window_master.title("Remove An Entry")
-        self.parent = parent
-        # self.remove_entry_window_master = create_palette_window("Remove An Entry")
+    def retrieve_and_remove_selection(self):
+        remove_entry(self.names_list.get(self.names_list.curselection()[0]))
+        self.on_close()
 
-        def retrieve_and_remove_selection(*args):
-            remove_entry(self.names_list.get(self.names_list.curselection()[0]))
+    def __init__(self, parent, paste_dict):
+        self.remove_entry_window_master = Toplevel(parent.settings_window_master)
+        self.remove_entry_window_master.title("Remove An Entry")
+        self.remove_entry_window_master.attributes("-topmost", True)
+        self.parent = parent
+        self.paste_dict = paste_dict
+        # self.remove_entry_window_master = create_palette_window("Remove An Entry")
 
         def check_del_button_state(*args):
             try:
@@ -92,10 +95,10 @@ class RemoveEntryWindow:
             self.names_list.insert(END, key)
 
             # attach listbox to scrollbar
-        self.names_list.config(yscrollcommand=scrollbar.set)
+        self.names_list.config(yscrollcommand=self.scrollbar.set)
 
         # scrollbar command param
-        self.scrollbar.config(command=names_list.yview)
+        self.scrollbar.config(command=self.names_list.yview)
 
         # bind for selection change to check if save should be greyed out
         self.names_list.bind("<ButtonRelease>", check_del_button_state)
@@ -116,7 +119,7 @@ class RemoveEntryWindow:
             master=self.remove_entry_window_master,
             text="Delete Entry",
             state=DISABLED,
-            command=retrieve_and_remove_selection,
+            command=self.retrieve_and_remove_selection,
         )
         self.del_entry_button.grid(row=1, column=1)
 
@@ -135,10 +138,12 @@ class RemoveEntryWindow:
 
 # def prompt_add_entry(paste_dict):
 class AddEntryWindow:
-    def __init__(self, parent):
-        self.add_entry_window_master = Toplevel(parent.window)
+    def __init__(self, parent, paste_dict):
+        self.add_entry_window_master = Toplevel(parent.settings_window_master)
         self.add_entry_window_master.title("Add An Entry")
+        self.add_entry_window_master.attributes("-topmost", True)
         self.parent = parent
+        self.paste_dict = paste_dict
 
         def check_save_button_state(*args):
             if len(name_entry.get()) > 0 and len(value_entry.get()) > 0:
@@ -174,10 +179,9 @@ class AddEntryWindow:
         # save button:
 
         def save_entry():
-            if not name_entry.get() in paste_dict.keys():
+            if not name_entry.get() in self.paste_dict.keys():
                 write_addition_to_file(name_entry.get(), value_entry.get())
                 self.on_close()
-                # TODO: reload somewhere here????
             else:
                 messagebox.showerror(
                     "ENTRY REJECTED",
@@ -227,6 +231,12 @@ def remove_entry(key):
 
 
 class SettingsWindow:
+    def open_add_entry_window(self):
+        self.add_entry_window = AddEntryWindow(self, self.paste_dict)
+
+    def open_remove_entry_window(self):
+        self.remove_entry_window = RemoveEntryWindow(self, self.paste_dict)
+
     def apply_changes(self):
         self.parent.update_display_info(self.num_cols_var.get())
         self.on_close()
@@ -236,6 +246,8 @@ class SettingsWindow:
         self.settings_window_master.title("Text Palette Settings")
         self.settings_window_master.attributes("-topmost", True)
         self.parent = parent
+
+        self.paste_dict = parent.paste_dict
 
         # create number of columns label and entry box
         self.num_cols_label = Label(
@@ -255,7 +267,7 @@ class SettingsWindow:
         self.add_entry_button = Button(
             master=self.settings_window_master,
             text="+ Add entry",
-            command=lambda: prompt_add_entry(paste_dict),
+            command=self.open_add_entry_window,
         )
         self.add_entry_button.grid(row=2, column=0, pady=10, padx=5, sticky="NESW")
 
@@ -263,7 +275,7 @@ class SettingsWindow:
         self.remove_entry_button = Button(
             master=self.settings_window_master,
             text="- Remove entry",
-            command=lambda: prompt_remove_entry(paste_dict),
+            command=self.open_remove_entry_window,
         )
         self.remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
 
