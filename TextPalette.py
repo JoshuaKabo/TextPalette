@@ -65,7 +65,7 @@ def create_palette_window(title="Text Palette", topmost=True):
 
 
 # def prompt_remove_entry(paste_dict):
-class remove_entry_window:
+class RemoveEntryWindow:
     def __init__(self):
         self.remove_entry_window_master = create_palette_window("Remove An Entry")
 
@@ -124,14 +124,21 @@ class remove_entry_window:
         )
         self.del_entry_button.grid(row=1, column=1)
 
+        self.remove_entry_window_master.protocol("WM_DELETE_WINDOW", self.on_close)
+
         self.remove_entry_window_master.mainloop()
 
     # cancel and save at the bottom
     # make save grey out unless something is selected
 
+    # important to handle close
+    def on_close(self):
+        self.parent.remove_entry_window = None
+        self.remove_entry_window_master.destroy()
+
 
 # def prompt_add_entry(paste_dict):
-class add_entry_window:
+class AddEntryWindow:
     def __init__(self):
         self.add_entry_window_master = create_palette_window("Add An Entry")
 
@@ -188,7 +195,14 @@ class add_entry_window:
         save_button.grid(row=3, column=1, columnspan=1, sticky="NESW")
         # endregion
 
+        self.add_entry_window_master.protocol("WM_DELETE_WINDOW", self.on_close)
+
         self.add_entry_window_master.mainloop()
+
+    # important to handle close
+    def on_close(self):
+        self.parent.add_entry_window = None
+        self.add_entry_window_master.destroy()
 
 
 def write_addition_to_file(name, value):
@@ -214,27 +228,28 @@ def remove_entry(key):
                 curr_ind += 1
 
 
-class settings_window:
-    def __init__(self):
-        # def handle_settings_window(paste_dict):
-        self.settings_window_master = create_palette_window(
-            title="Text Palette Settings"
-        )
+class SettingsWindow:
+    def __init__(self, parent):
+        self.settings_window_master = Toplevel(parent.window)
+        self.settings_window_master.title("Text Palette Settings")
 
         # create number of columns label and entry box
         self.num_cols_label = Label(
-            master=settings_window_master, text="Number of columns:"
+            master=self.settings_window_master, text="Number of columns:"
         )
         self.num_cols_label.grid(row=0, column=0, pady=20, padx=5, sticky="NESW")
         self.num_cols_var = IntVar(value=3)
         self.num_cols_entry = Spinbox(
-            master=settings_window_master, from_=1, to=99, textvariable=num_cols_var
+            master=self.settings_window_master,
+            from_=1,
+            to=99,
+            textvariable=self.num_cols_var,
         )
         self.num_cols_entry.grid(row=0, column=1, pady=20, padx=5, sticky="NESW")
 
         # create add entry button
         self.add_entry_button = Button(
-            master=settings_window_master,
+            master=self.settings_window_master,
             text="+ Add entry",
             command=lambda: prompt_add_entry(paste_dict),
         )
@@ -271,11 +286,18 @@ class settings_window:
         for i in range(0, 4):
             self.settings_window_master.rowconfigure(i, weight=1)
 
+        self.settings_window_master.protocol("WM_DELETE_WINDOW", self.on_close)
+
         self.settings_window_master.mainloop()
+
+    # important to handle close
+    def on_close(self):
+        self.parent.settings_window = None
+        self.settings_window_master.destroy()
 
 
 # def main():
-class text_palette_window:
+class TextPaletteWindow:
     def __init__(self):
         self.window = create_palette_window()
 
@@ -356,6 +378,9 @@ class text_palette_window:
 
         # endregion
 
+    def open_settings_window(self):
+        self.settings_window = SettingsWindow(self)
+
 
 def lerp(a, b, t):
     return (1 - t) * a + t * b
@@ -408,7 +433,7 @@ def load_paste_dict():
 
 
 if __name__ == "__main__":
-    main_widow = text_palette_window()
+    main_widow = TextPaletteWindow()
 
 # TODO: draw columns down, and do a continuous loop of build, rather than disconnected as it is
 
