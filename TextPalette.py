@@ -69,6 +69,7 @@ class RemoveEntryWindow:
     def __init__(self, parent):
         self.remove_entry_window_master = Toplevel(parent.window)
         self.remove_entry_window_master.title("Remove An Entry")
+        self.parent = parent
         # self.remove_entry_window_master = create_palette_window("Remove An Entry")
 
         def retrieve_and_remove_selection(*args):
@@ -111,7 +112,7 @@ class RemoveEntryWindow:
         self.cancel_button = Button(
             master=self.remove_entry_window_master,
             text="Cancel",
-            command=self.remove_entry_window_master.destroy,
+            command=self.on_close,
         )
         self.cancel_button.grid(row=1, column=0)
 
@@ -144,6 +145,7 @@ class AddEntryWindow:
     def __init__(self, parent):
         self.add_entry_window_master = Toplevel(parent.window)
         self.add_entry_window_master.title("Add An Entry")
+        self.parent = parent
 
         def check_save_button_state(*args):
             if len(name_entry.get()) > 0 and len(value_entry.get()) > 0:
@@ -173,7 +175,7 @@ class AddEntryWindow:
         cancel_button = Button(
             master=self.add_entry_window_master,
             text="Cancel",
-            command=self.add_entry_window_master.destroy,
+            command=self.on_close,
         )
         cancel_button.grid(row=3, column=0, sticky="NESW")
         # save button:
@@ -181,7 +183,7 @@ class AddEntryWindow:
         def save_entry():
             if not name_entry.get() in paste_dict.keys():
                 write_addition_to_file(name_entry.get(), value_entry.get())
-                self.add_entry_window_master.destroy()
+                self.on_close()
                 # TODO: reload somewhere here????
             else:
                 messagebox.showerror(
@@ -191,7 +193,7 @@ class AddEntryWindow:
 
         save_button = Button(
             master=self.add_entry_window_master,
-            text="Save changes",
+            text="Save Changes",
             command=save_entry,
             state=DISABLED,
         )
@@ -232,9 +234,16 @@ def remove_entry(key):
 
 
 class SettingsWindow:
+    def apply_changes(self):
+        self.parent.update_desired_cols(2)
+        print("TODO: HOOK UP COLS")
+        self.on_close()
+
     def __init__(self, parent):
         self.settings_window_master = Toplevel(parent.window)
         self.settings_window_master.title("Text Palette Settings")
+        self.settings_window_master.attributes("-topmost", True)
+        self.parent = parent
 
         # create number of columns label and entry box
         self.num_cols_label = Label(
@@ -270,17 +279,14 @@ class SettingsWindow:
         self.cancel_button = Button(
             master=self.settings_window_master,
             text="Cancel",
-            command=self.settings_window_master.destroy,
+            command=self.on_close,
         )
         self.cancel_button.grid(row=3, column=0, sticky="NESW")
 
-        # create save changes button
-        # save needs to reload the main window
-        # TODO: reload on save!!
         self.save_button = Button(
             master=self.settings_window_master,
-            text="Save changes",
-            command=lambda: prompt_add_entry(paste_dict),
+            text="Apply Changes",
+            command=self.apply_changes,
         )
         self.save_button.grid(row=3, column=1, sticky="NESW")
 
@@ -295,6 +301,7 @@ class SettingsWindow:
 
     # important to handle close
     def on_close(self):
+        self.parent.reload_palette_buttons()
         self.parent.settings_window = None
         self.settings_window_master.destroy()
 
@@ -317,6 +324,9 @@ class TextPaletteWindow:
 
     def open_settings_window(self):
         self.settings_window = SettingsWindow(self)
+
+    def update_desired_cols(self, new_val):
+        self.desired_cols = new_val
 
     def reload_palette_buttons(self):
         # clear out the old buttons
