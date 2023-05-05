@@ -20,6 +20,25 @@ settings_text_color = "#EEEE22"
 user_prefs = {}
 
 
+def get_palette_row_col(curr_ind, desired_rows, desired_cols):
+    # if there are more cols than rows, alternate filling left and right
+    if desired_cols > desired_rows:
+        curr_row = math.floor(curr_ind / desired_cols)
+        if curr_row % 2 == 0:
+            curr_col = curr_ind % desired_cols
+        else:
+            curr_col = desired_cols - (curr_ind % desired_cols) - 1
+    # else, there are more rows than cols, so alternate filling down and up
+    else:
+        curr_col = math.floor(curr_ind / desired_rows)
+        if curr_col % 2 == 0:
+            curr_row = curr_ind % desired_rows
+        else:
+            curr_row = desired_rows - (curr_ind % desired_rows) - 1
+
+    return curr_row, curr_col
+
+
 def create_palette_button(
     master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE
 ):
@@ -57,10 +76,10 @@ def create_palette_window(title="Text Palette", topmost=True):
     return window
 
 
-# def prompt_remove_entry(paste_dict):
 class RemoveEntryWindow:
     def retrieve_and_remove_selection(self):
         remove_entry(self.names_list.get(self.names_list.curselection()[0]))
+        self.parent.tell_main_to_reload_buttons()
         self.on_close()
 
     def __init__(self, parent, paste_dict):
@@ -69,7 +88,6 @@ class RemoveEntryWindow:
         self.remove_entry_window_master.attributes("-topmost", True)
         self.parent = parent
         self.paste_dict = paste_dict
-        # self.remove_entry_window_master = create_palette_window("Remove An Entry")
 
         def check_del_button_state(*args):
             try:
@@ -82,7 +100,6 @@ class RemoveEntryWindow:
                 self.del_entry_button.config(state=DISABLED)
 
         # the list part of the scroll list
-        # name_selection = StringVar()
         self.names_list = Listbox(self.remove_entry_window_master)
         self.names_list.grid(row=0, column=0, columnspan=2, sticky="WEN")
 
@@ -112,9 +129,6 @@ class RemoveEntryWindow:
         )
         self.cancel_button.grid(row=1, column=0)
 
-        # create save changes button
-        # save needs to reload the main window
-        # it also needs to update in every possible place
         self.del_entry_button = Button(
             master=self.remove_entry_window_master,
             text="Delete Entry",
@@ -127,16 +141,12 @@ class RemoveEntryWindow:
 
         self.remove_entry_window_master.mainloop()
 
-    # cancel and save at the bottom
-    # make save grey out unless something is selected
-
     # important to handle close
     def on_close(self):
         self.parent.remove_entry_window = None
         self.remove_entry_window_master.destroy()
 
 
-# def prompt_add_entry(paste_dict):
 class AddEntryWindow:
     def __init__(self, parent, paste_dict):
         self.add_entry_window_master = Toplevel(parent.settings_window_master)
@@ -181,6 +191,7 @@ class AddEntryWindow:
         def save_entry():
             if not name_entry.get() in self.paste_dict.keys():
                 write_addition_to_file(name_entry.get(), value_entry.get())
+                self.parent.tell_parent_to_reload_buttons()
                 self.on_close()
             else:
                 messagebox.showerror(
@@ -241,6 +252,9 @@ class SettingsWindow:
         self.parent.update_display_info(self.num_cols_var.get())
         self.on_close()
 
+    def tell_main_to_reload_buttons(self):
+        self.parent.reload_palette_buttons()
+
     def __init__(self, parent):
         self.settings_window_master = Toplevel(parent.window)
         self.settings_window_master.title("Text Palette Settings")
@@ -250,9 +264,7 @@ class SettingsWindow:
         self.paste_dict = parent.paste_dict
 
         # create number of columns label and entry box
-        self.num_cols_label = Label(
-            master=self.settings_window_master, text="Number of columns:"
-        )
+        self.num_cols_label = Label(master=self.settings_window_master, text="Columns:")
         self.num_cols_label.grid(row=0, column=0, pady=20, padx=5, sticky="NESW")
         self.num_cols_var = IntVar(value=parent.desired_cols)
         self.num_cols_entry = Spinbox(
@@ -263,13 +275,25 @@ class SettingsWindow:
         )
         self.num_cols_entry.grid(row=0, column=1, pady=20, padx=5, sticky="NESW")
 
+        # create number of rows label and entry box
+        self.num_rows_label = Label(master=self.settings_window_master, text="Rows:")
+        self.num_rows_label.grid(row=1, column=0, pady=20, padx=5, sticky="NESW")
+        self.num_rows_var = IntVar(value=parent.desired_rows)
+        self.num_rows_entry = Spinbox(
+            master=self.settings_window_master,
+            from_=1,
+            to=99,
+            textvariable=self.num_rows_var,
+        )
+        self.num_rows_entry.grid(row=1, column=1, pady=20, padx=5, sticky="NESW")
+
         # create add entry button
         self.add_entry_button = Button(
             master=self.settings_window_master,
             text="+ Add entry",
             command=self.open_add_entry_window,
         )
-        self.add_entry_button.grid(row=2, column=0, pady=10, padx=5, sticky="NESW")
+        self.add_entry_button.grid(row=3, column=0, pady=10, padx=5, sticky="NESW")
 
         # create remove entry button
         self.remove_entry_button = Button(
@@ -277,7 +301,7 @@ class SettingsWindow:
             text="- Remove entry",
             command=self.open_remove_entry_window,
         )
-        self.remove_entry_button.grid(row=2, column=1, pady=10, padx=5, sticky="NESW")
+        self.remove_entry_button.grid(row=3, column=1, pady=10, padx=5, sticky="NESW")
 
         # create cancel button
         self.cancel_button = Button(
@@ -285,18 +309,19 @@ class SettingsWindow:
             text="Cancel",
             command=self.on_close,
         )
-        self.cancel_button.grid(row=3, column=0, sticky="NESW")
+        self.cancel_button.grid(row=4, column=0, sticky="NESW")
 
-        self.save_button = Button(
+        # create apply button
+        self.apply_button = Button(
             master=self.settings_window_master,
             text="Apply Changes",
             command=self.apply_changes,
         )
-        self.save_button.grid(row=3, column=1, sticky="NESW")
+        self.apply_button.grid(row=4, column=1, sticky="NESW")
 
         self.settings_window_master.columnconfigure(0, weight=1)
         self.settings_window_master.columnconfigure(1, weight=1)
-        for i in range(0, 4):
+        for i in range(0, 5):
             self.settings_window_master.rowconfigure(i, weight=1)
 
         self.settings_window_master.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -318,7 +343,10 @@ class TextPaletteWindow:
 
         self.helv12 = tkFont.Font(family="Helvetica", size=12, weight="bold")
 
-        self.desired_cols = 9
+        self.desired_cols = 1
+        # self.desired_rows =
+
+        self.settings_window = None
 
         self.button_arr = []
         self.reload_palette_buttons()
@@ -339,12 +367,21 @@ class TextPaletteWindow:
         # re-read what's available
         paste_dict = load_paste_dict()
 
+        # if settings window is open, update its instance of paste_dict
+        if self.settings_window:
+            self.settings_window.paste_dict = paste_dict
+
+        # calc rows necessary based on num cols and size of paste_dict (+1 for settings button)
+        self.desired_rows = math.ceil((len(paste_dict) + 1) / self.desired_cols)
+
         # region key-val buttons
         self.curr_ind = 0
         for key in paste_dict.keys():
             # handle positioning
-            curr_col = self.curr_ind % self.desired_cols
-            curr_row = math.floor(self.curr_ind / self.desired_cols)
+
+            curr_row, curr_col = get_palette_row_col(
+                self.curr_ind, self.desired_rows, self.desired_cols
+            )
 
             # overwrite for color test
             primary_bg = select_rgb_color(self.curr_ind, len(paste_dict) - 1)
@@ -371,8 +408,10 @@ class TextPaletteWindow:
         # endregion
 
         # region settings button
-        self.curr_col = self.curr_ind % self.desired_cols
-        self.curr_row = math.floor(self.curr_ind / self.desired_cols)
+        # if there are more columns than rows, alternate fill direction
+        curr_row, curr_col = get_palette_row_col(
+            self.curr_ind, self.desired_rows, self.desired_cols
+        )
 
         self.settings_button = create_palette_button(
             self.window,
@@ -384,12 +423,10 @@ class TextPaletteWindow:
             # handler=self.reload_palette_buttons,
             handler=self.open_settings_window,
         )
-        self.settings_button.grid(
-            row=self.curr_row, column=self.curr_col, sticky="NESW"
-        )
+        self.settings_button.grid(row=curr_row, column=curr_col, sticky="NESW")
 
-        self.window.columnconfigure(self.curr_col, weight=1)
-        self.window.rowconfigure(self.curr_row, weight=1)
+        self.window.columnconfigure(curr_col, weight=1)
+        self.window.rowconfigure(curr_row, weight=1)
 
         self.button_arr.append(self.settings_button)
 
@@ -444,6 +481,21 @@ def load_paste_dict():
     dict_file.close()
 
     return loading_dict
+
+
+# save user_prefs to a pickle file
+def save_user_prefs(user_prefs):
+    with open("user_prefs.pkl", "wb") as f:
+        pickle.dump(user_prefs, f, pickle.HIGHEST_PROTOCOL)
+
+
+def load_user_prefs():
+    try:
+        with open("user_prefs.pkl", "rb") as f:
+            user_prefs = pickle.load(f)
+    except:
+        user_prefs = {}
+    return user_prefs
 
 
 if __name__ == "__main__":
