@@ -82,12 +82,12 @@ class RemoveEntryWindow:
         self.parent.tell_main_to_reload_buttons()
         self.on_close()
 
-    def __init__(self, parent, paste_dict):
+    def __init__(self, parent):
         self.remove_entry_window_master = Toplevel(parent.settings_window_master)
         self.remove_entry_window_master.title("Remove An Entry")
         self.remove_entry_window_master.attributes("-topmost", True)
         self.parent = parent
-        self.paste_dict = paste_dict
+        self.paste_dict = parent.paste_dict
 
         def check_del_button_state(*args):
             try:
@@ -148,12 +148,12 @@ class RemoveEntryWindow:
 
 
 class AddEntryWindow:
-    def __init__(self, parent, paste_dict):
+    def __init__(self, parent):
         self.add_entry_window_master = Toplevel(parent.settings_window_master)
         self.add_entry_window_master.title("Add An Entry")
         self.add_entry_window_master.attributes("-topmost", True)
         self.parent = parent
-        self.paste_dict = paste_dict
+        self.paste_dict = parent.paste_dict
 
         def check_save_button_state(*args):
             if len(name_entry.get()) > 0 and len(value_entry.get()) > 0:
@@ -191,7 +191,7 @@ class AddEntryWindow:
         def save_entry():
             if not name_entry.get() in self.paste_dict.keys():
                 write_addition_to_file(name_entry.get(), value_entry.get())
-                self.parent.tell_parent_to_reload_buttons()
+                self.parent.tell_main_to_reload_buttons()
                 self.on_close()
             else:
                 messagebox.showerror(
@@ -243,17 +243,20 @@ def remove_entry(key):
 
 class SettingsWindow:
     def open_add_entry_window(self):
-        self.add_entry_window = AddEntryWindow(self, self.paste_dict)
+        self.add_entry_window = AddEntryWindow(self)
 
     def open_remove_entry_window(self):
-        self.remove_entry_window = RemoveEntryWindow(self, self.paste_dict)
+        self.remove_entry_window = RemoveEntryWindow(self)
 
     def apply_changes(self):
         self.parent.update_display_info(self.num_cols_var.get())
         self.on_close()
 
     def tell_main_to_reload_buttons(self):
-        self.parent.reload_palette_buttons()
+        self.parent.reload_palette_buttons(self)
+
+    def update_paste_dict(self, paste_dict):
+        self.paste_dict = paste_dict
 
     def update_rows_cols(self, rows=0, cols=0):
         # updates the rows and cols in the settings window
@@ -276,7 +279,13 @@ class SettingsWindow:
         self.settings_window_master.attributes("-topmost", True)
         self.parent = parent
 
+        self.add_entry_window = None
+        self.remove_entry_window = None
+
         self.paste_dict = parent.paste_dict
+        print(self.paste_dict)
+        print("parent")
+        print(parent.paste_dict)
 
         # create number of columns label and entry box
         self.num_cols_label = Label(master=self.settings_window_master, text="Columns:")
@@ -399,10 +408,8 @@ class TextPaletteWindow:
             # store previous number of columns, update new
             self.prev_desired_cols = self.desired_cols
             self.desired_cols = num_cols
-            # print("desired_cols: " + str(self.desired_cols))
-            # print("prev: " + str(self.prev_desired_cols))
 
-    def reload_palette_buttons(self):
+    def reload_palette_buttons(self, settings_window_caller=None):
         # reset the settings_window's grid
         prev_desired_rows = math.ceil(
             (self.prev_paste_dict_size + 1) / self.prev_desired_cols
@@ -417,19 +424,18 @@ class TextPaletteWindow:
             button.destroy()
 
         # re-read what's available
-        paste_dict = load_paste_dict()
+        self.paste_dict = load_paste_dict()
         self.prev_paste_dict_size = len(self.paste_dict)
 
-        # if settings window is open, update its instance of paste_dict
-        if self.settings_window:
-            self.settings_window.paste_dict = paste_dict
+        if settings_window_caller != None:
+            settings_window_caller.update_paste_dict(paste_dict=self.paste_dict)
 
         # calc rows necessary based on num cols and size of paste_dict (+1 for settings button)
-        self.desired_rows = math.ceil((len(paste_dict) + 1) / self.desired_cols)
+        self.desired_rows = math.ceil((len(self.paste_dict) + 1) / self.desired_cols)
 
         # region key-val buttons
         self.curr_ind = 0
-        for key in paste_dict.keys():
+        for key in self.paste_dict.keys():
             # handle positioning
 
             curr_row, curr_col = get_palette_row_col(
@@ -437,7 +443,7 @@ class TextPaletteWindow:
             )
 
             # overwrite for color test
-            primary_bg = select_rgb_color(self.curr_ind, len(paste_dict) - 1)
+            primary_bg = select_rgb_color(self.curr_ind, len(self.paste_dict) - 1)
 
             # make button
             button = create_palette_button(
@@ -447,7 +453,7 @@ class TextPaletteWindow:
                 primary_bg,
                 secondary_dark_grey,
                 "black",
-                paste_dict=paste_dict,
+                paste_dict=self.paste_dict,
             )
 
             button.grid(row=curr_row, column=curr_col, sticky="NESW")
@@ -558,3 +564,5 @@ if __name__ == "__main__":
 # Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD  EVEN COPY FOR YOUU!!!
 
 # TODO: pickle user prefs!
+
+# TODO: caught a problem in trying to save - 'SettingsWindow' object has no attribute 'tell_parent_to_reload_buttons'
