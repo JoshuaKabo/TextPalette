@@ -255,6 +255,21 @@ class SettingsWindow:
     def tell_main_to_reload_buttons(self):
         self.parent.reload_palette_buttons()
 
+    def update_rows_cols(self, rows=0, cols=0):
+        # updates the rows and cols in the settings window
+        # then updates the num cols in the main window
+        self.num_rows_var.set(rows)
+        if rows == 0:
+            # cols was updated, adjust rows accordingly
+            rows = math.ceil((len(self.paste_dict) + 1) / cols)
+        else:
+            # rows was updated, adjust cols accordingly
+            cols = math.ceil((len(self.paste_dict) + 1) / rows)
+
+        self.num_cols_var.set(cols)
+        self.num_rows_var.set(rows)
+        self.parent.update_display_info(cols)
+
     def __init__(self, parent):
         self.settings_window_master = Toplevel(parent.window)
         self.settings_window_master.title("Text Palette Settings")
@@ -286,6 +301,27 @@ class SettingsWindow:
             textvariable=self.num_rows_var,
         )
         self.num_rows_entry.grid(row=1, column=1, pady=20, padx=5, sticky="NESW")
+
+        # whenever num_rows_entry is edited, call update_rows_cols with the new value
+        self.num_rows_entry.bind(
+            "<KeyRelease>",
+            lambda event: self.update_rows_cols(rows=int(self.num_rows_var.get())),
+        )
+        # mouse release event
+        self.num_rows_entry.bind(
+            "<ButtonRelease>",
+            lambda event: self.update_rows_cols(rows=int(self.num_rows_var.get())),
+        )
+        # whenever num_cols_entry is edited, call update_rows_cols with the new value
+        self.num_cols_entry.bind(
+            "<KeyRelease>",
+            lambda event: self.update_rows_cols(cols=int(self.num_cols_var.get())),
+        )
+        # mouse release event
+        self.num_cols_entry.bind(
+            "<ButtonRelease>",
+            lambda event: self.update_rows_cols(cols=int(self.num_cols_var.get())),
+        )
 
         # create add entry button
         self.add_entry_button = Button(
@@ -340,11 +376,12 @@ class TextPaletteWindow:
         self.window = create_palette_window()
 
         self.paste_dict = load_paste_dict()
+        self.prev_paste_dict_size = len(self.paste_dict)
 
         self.helv12 = tkFont.Font(family="Helvetica", size=12, weight="bold")
 
         self.desired_cols = 1
-        # self.desired_rows =
+        self.prev_desired_cols = self.desired_cols
 
         self.settings_window = None
 
@@ -357,15 +394,31 @@ class TextPaletteWindow:
         self.settings_window = SettingsWindow(self)
 
     def update_display_info(self, num_cols):
-        self.desired_cols = num_cols
+        # only update values if they have changed
+        if num_cols != self.desired_cols:
+            # store previous number of columns, update new
+            self.prev_desired_cols = self.desired_cols
+            self.desired_cols = num_cols
+            # print("desired_cols: " + str(self.desired_cols))
+            # print("prev: " + str(self.prev_desired_cols))
 
     def reload_palette_buttons(self):
+        # reset the settings_window's grid
+        prev_desired_rows = math.ceil(
+            (self.prev_paste_dict_size + 1) / self.prev_desired_cols
+        )
+        for i in range(0, prev_desired_rows + 1):
+            self.window.grid_rowconfigure(i, weight=0)
+        for i in range(0, self.prev_desired_cols + 1):
+            self.window.grid_columnconfigure(i, weight=0)
+
         # clear out the old buttons
         for button in self.button_arr:
             button.destroy()
 
         # re-read what's available
         paste_dict = load_paste_dict()
+        self.prev_paste_dict_size = len(self.paste_dict)
 
         # if settings window is open, update its instance of paste_dict
         if self.settings_window:
@@ -501,26 +554,7 @@ def load_user_prefs():
 if __name__ == "__main__":
     main_widow = TextPaletteWindow()
 
-# TODO: draw columns down, and do a continuous loop of build, rather than disconnected as it is
-
 # TODO:
-# Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD (MAYBE EVEN COPY FOR YOUU!!!)
-
-# Modification flow:
-# a request for insert / delete is made
-# the file is updated
-# the main display reloads its paste_dict
-# the buttons reload
-
-# TODO: refresh main ui when appropriate !! Start with column update, that should be the easiest!
-# So I need to delete the old ones and generate the new ones
-# maybe, whenever the box is closed, I can regen!
-# column number saving.... tricky...
-# TODO: column logic, cannot be more than num elements
-
-# Scope walkback - not working
-# I think I know what I need to do.
-# I need to start a new project, with a main window: {label, button}, button opens second window (close), each close updates the main window
-# it'll likely need classes. However I do it, it'll set me up for reload in textpalette.
+# Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD  EVEN COPY FOR YOUU!!!
 
 # TODO: pickle user prefs!
