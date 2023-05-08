@@ -566,3 +566,6 @@ if __name__ == "__main__":
 # TODO: pickle user prefs!
 
 # TODO: caught a problem in trying to save - 'SettingsWindow' object has no attribute 'tell_parent_to_reload_buttons'
+
+# TODO - JUST FIGURED IT OUT!!
+# I SHOULD HAVE THE AUTOFILL REGISTER ON TRIPLE CLICK! OR MODIFED CLICK!
