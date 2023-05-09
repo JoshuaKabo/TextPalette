@@ -492,13 +492,8 @@ class TextPaletteWindow:
         # endregion
 
 
-def lerp(a, b, t):
-    return (1 - t) * a + t * b
-
-
-# pick a color on a lerp from part to whole
 def select_rgb_color(ind, n_opt):
-    hue = ind / n_opt
+    hue = ind / (n_opt + 1)
     sat = 0.55
     val = 1
     rgb = colorsys.hsv_to_rgb(hue, sat, val)
