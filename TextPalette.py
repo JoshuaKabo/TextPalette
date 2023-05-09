@@ -7,6 +7,8 @@ import pyautogui
 from tkinter import *
 from tkinter import font as tkFont
 from tkinter import messagebox
+from pynput import mouse
+import time
 
 # theme constants
 primary_light_grey = "#DDDDDD"
@@ -552,8 +554,35 @@ def load_user_prefs():
     return user_prefs
 
 
+class InputHelper:
+    def __init__(self):
+        self.set_clicks_to_junk()
+        self.listener = mouse.Listener(
+            on_click=lambda x, y, button, pressed: self.on_click(x, y, button, pressed)
+        )
+        self.listener.start()
+
+    # initialize / reset clicks
+    def set_clicks_to_junk(self):
+        self.click_0 = 0
+        self.click_1 = 1000
+        self.click_2 = 2000
+
+    # tap into click to listen for triples
+    def on_click(self, x, y, button, pressed):
+        if pressed and button == mouse.Button.left:
+            self.click_0 = self.click_1
+            self.click_1 = self.click_2
+            self.click_2 = time.time_ns() / 1000000
+            if self.click_1 - self.click_0 < 500 and self.click_2 - self.click_1 < 500:
+                self.set_clicks_to_junk()
+                print("TRIPLE CLICK")
+
+
 if __name__ == "__main__":
+    input_helper = InputHelper()
     main_widow = TextPaletteWindow()
+
 
 # TODO:
 # Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD  EVEN COPY FOR YOUU!!!
@@ -562,5 +591,9 @@ if __name__ == "__main__":
 
 # TODO: caught a problem in trying to save - 'SettingsWindow' object has no attribute 'tell_parent_to_reload_buttons'
 
-# TODO - JUST FIGURED IT OUT!!
-# I SHOULD HAVE THE AUTOFILL REGISTER ON TRIPLE CLICK! OR MODIFED CLICK!
+# TODO: should the mouse snap to the palette on triple click??
+# test this when I get there
+
+# listen for triple click
+# if triple click, then autofill
+# else, do nothing
