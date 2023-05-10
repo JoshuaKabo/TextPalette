@@ -581,9 +581,7 @@ class InputHelper:
         # jump, click, paste
         if self.ready_for_jump:
             self.ready_for_jump = False
-            pyautogui.moveTo(self.mouse_jump_x, self.mouse_jump_y)
-            time.sleep(0.1)
-            pyautogui.click()
+            pyautogui.click(self.mouse_jump_x, self.mouse_jump_y)
             pyautogui.keyDown("ctrl")
             pyautogui.press("v")
             pyautogui.keyUp("ctrl")
