@@ -256,14 +256,11 @@ class SettingsWindow:
         self.remove_entry_window = None
 
         self.paste_dict = parent.paste_dict
-        print(self.paste_dict)
-        print("parent")
-        print(parent.paste_dict)
 
         # create number of columns label and entry box
         self.num_cols_label = Label(master=self.settings_window_master, text="Columns:")
         self.num_cols_label.grid(row=0, column=0, pady=20, padx=5, sticky="NESW")
-        self.num_cols_var = IntVar(value=parent.desired_cols)
+        self.num_cols_var = IntVar(value=parent.user_prefs["desired_cols"])
         self.num_cols_entry = Spinbox(
             master=self.settings_window_master,
             from_=1,
@@ -275,7 +272,7 @@ class SettingsWindow:
         # create number of rows label and entry box
         self.num_rows_label = Label(master=self.settings_window_master, text="Rows:")
         self.num_rows_label.grid(row=1, column=0, pady=20, padx=5, sticky="NESW")
-        self.num_rows_var = IntVar(value=parent.desired_rows)
+        self.num_rows_var = IntVar(value=parent.user_prefs["desired_cols"])
         self.num_rows_entry = Spinbox(
             master=self.settings_window_master,
             from_=1,
@@ -363,8 +360,9 @@ class TextPaletteWindow:
 
         self.helv12 = tkFont.Font(family="Helvetica", size=12, weight="bold")
 
-        self.desired_cols = 1
-        self.prev_desired_cols = self.desired_cols
+        self.user_prefs = load_user_prefs()
+
+        self.prev_desired_cols = self.user_prefs["desired_cols"]
 
         self.settings_window = None
 
@@ -378,15 +376,15 @@ class TextPaletteWindow:
 
     def update_display_info(self, num_cols):
         # only update values if they have changed
-        if num_cols != self.desired_cols:
+        if num_cols != self.user_prefs["desired_cols"]:
             # store previous number of columns, update new
-            self.prev_desired_cols = self.desired_cols
-            self.desired_cols = num_cols
+            self.prev_desired_cols = self.user_prefs["desired_cols"]
+            self.user_prefs["desired_cols"] = num_cols
+            # save user prefs
+            save_user_prefs(self.user_prefs)
 
     def handle_copy(self, key, paste_dict):
         pyperclip.copy(paste_dict[key])
-        # if(self.input_helper.ready)
-        # print(self.input_helper.ready_for_paste)
         self.input_helper.handle_mouse_jump()
 
     def create_palette_button(
@@ -439,7 +437,9 @@ class TextPaletteWindow:
             settings_window_caller.update_paste_dict(paste_dict=self.paste_dict)
 
         # calc rows necessary based on num cols and size of paste_dict (+1 for settings button)
-        self.desired_rows = math.ceil((len(self.paste_dict) + 1) / self.desired_cols)
+        self.desired_rows = math.ceil(
+            (len(self.paste_dict) + 1) / self.user_prefs["desired_cols"]
+        )
 
         # region key-val buttons
         self.curr_ind = 0
@@ -447,7 +447,7 @@ class TextPaletteWindow:
             # handle positioning
 
             curr_row, curr_col = get_palette_row_col(
-                self.curr_ind, self.desired_rows, self.desired_cols
+                self.curr_ind, self.desired_rows, self.user_prefs["desired_cols"]
             )
 
             # overwrite for color test
@@ -477,7 +477,7 @@ class TextPaletteWindow:
         # region settings button
         # if there are more columns than rows, alternate fill direction
         curr_row, curr_col = get_palette_row_col(
-            self.curr_ind, self.desired_rows, self.desired_cols
+            self.curr_ind, self.desired_rows, self.user_prefs["desired_cols"]
         )
 
         self.settings_button = self.create_palette_button(
@@ -605,7 +605,6 @@ if __name__ == "__main__":
     main_widow = TextPaletteWindow(input_helper)
 
 
-# TODO: pickle user prefs!
-
-
-# TODO: make triple click disable-able in settings
+# TODO: User prefs
+# add text size?
+# allow disabling of triple click
