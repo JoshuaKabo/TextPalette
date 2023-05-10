@@ -41,35 +41,6 @@ def get_palette_row_col(curr_ind, desired_rows, desired_cols):
     return curr_row, curr_col
 
 
-def create_palette_button(
-    master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE
-):
-    if handler == NONE:
-        return Button(
-            master=master,
-            text=key,
-            font=font,
-            bg=bg,
-            width=13,
-            height=5,
-            activebackground=activebackground,
-            fg=fg,
-            command=lambda key=key: pyperclip.copy(paste_dict[key]),
-        )
-    else:
-        return Button(
-            master=master,
-            text=key,
-            font=font,
-            bg=bg,
-            width=13,
-            height=5,
-            activebackground=activebackground,
-            fg=fg,
-            command=handler,
-        )
-
-
 def create_palette_window(title="Text Palette", topmost=True):
     window = Tk()
     window.title(title)
@@ -383,8 +354,9 @@ class SettingsWindow:
 
 
 class TextPaletteWindow:
-    def __init__(self):
+    def __init__(self, input_helper):
         self.window = create_palette_window()
+        self.input_helper = input_helper
 
         self.paste_dict = load_paste_dict()
         self.prev_paste_dict_size = len(self.paste_dict)
@@ -410,6 +382,40 @@ class TextPaletteWindow:
             # store previous number of columns, update new
             self.prev_desired_cols = self.desired_cols
             self.desired_cols = num_cols
+
+    def handle_copy(self, key, paste_dict):
+        pyperclip.copy(paste_dict[key])
+        # if(self.input_helper.ready)
+        # print(self.input_helper.ready_for_paste)
+        self.input_helper.handle_mouse_jump()
+
+    def create_palette_button(
+        self, master, key, font, bg, activebackground, fg, paste_dict=NONE, handler=NONE
+    ):
+        if handler == NONE:
+            return Button(
+                master=master,
+                text=key,
+                font=font,
+                bg=bg,
+                width=13,
+                height=5,
+                activebackground=activebackground,
+                fg=fg,
+                command=lambda key=key: self.handle_copy(key, paste_dict),
+            )
+        else:
+            return Button(
+                master=master,
+                text=key,
+                font=font,
+                bg=bg,
+                width=13,
+                height=5,
+                activebackground=activebackground,
+                fg=fg,
+                command=handler,
+            )
 
     def reload_palette_buttons(self, settings_window_caller=None):
         # reset the settings_window's grid
@@ -448,7 +454,7 @@ class TextPaletteWindow:
             primary_bg = select_rgb_color(self.curr_ind, len(self.paste_dict) - 1)
 
             # make button
-            button = create_palette_button(
+            button = self.create_palette_button(
                 self.window,
                 key,
                 self.helv12,
@@ -474,7 +480,7 @@ class TextPaletteWindow:
             self.curr_ind, self.desired_rows, self.desired_cols
         )
 
-        self.settings_button = create_palette_button(
+        self.settings_button = self.create_palette_button(
             self.window,
             "Settings",
             self.helv12,
@@ -561,12 +567,26 @@ class InputHelper:
             on_click=lambda x, y, button, pressed: self.on_click(x, y, button, pressed)
         )
         self.listener.start()
+        self.ready_for_jump = False
+        self.mouse_jump_x = 0
+        self.mouse_jump_y = 0
 
     # initialize / reset clicks
     def set_clicks_to_junk(self):
         self.click_0 = 0
         self.click_1 = 1000
         self.click_2 = 2000
+
+    def handle_mouse_jump(self):
+        # jump, click, paste
+        if self.ready_for_jump:
+            self.ready_for_jump = False
+            pyautogui.moveTo(self.mouse_jump_x, self.mouse_jump_y)
+            time.sleep(0.1)
+            pyautogui.click()
+            pyautogui.keyDown("ctrl")
+            pyautogui.press("v")
+            pyautogui.keyUp("ctrl")
 
     # tap into click to listen for triples
     def on_click(self, x, y, button, pressed):
@@ -575,25 +595,19 @@ class InputHelper:
             self.click_1 = self.click_2
             self.click_2 = time.time_ns() / 1000000
             if self.click_1 - self.click_0 < 500 and self.click_2 - self.click_1 < 500:
+                # Triple click detected, set mouse jump and reset clicks
                 self.set_clicks_to_junk()
-                print("TRIPLE CLICK")
+                self.mouse_jump_x = x
+                self.mouse_jump_y = y
+                self.ready_for_jump = True
 
 
 if __name__ == "__main__":
     input_helper = InputHelper()
-    main_widow = TextPaletteWindow()
+    main_widow = TextPaletteWindow(input_helper)
 
-
-# TODO:
-# Integrate with pyautogui, so if you press the z key or somethign, the mouse will SNAP BACK AND FOCUS ON THE FORM REQUESTeD  EVEN COPY FOR YOUU!!!
 
 # TODO: pickle user prefs!
 
-# TODO: caught a problem in trying to save - 'SettingsWindow' object has no attribute 'tell_parent_to_reload_buttons'
 
-# TODO: should the mouse snap to the palette on triple click??
-# test this when I get there
-
-# listen for triple click
-# if triple click, then autofill
-# else, do nothing
+# TODO: make triple click disable-able in settings
